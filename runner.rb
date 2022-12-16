@@ -3,7 +3,7 @@ require 'uri'
 require 'json'
 require 'date'
 require 'time'
-require 'LOGGER'
+require 'logger'
 
 LOGGER = Logger.new(STDOUT)
 
