@@ -71,11 +71,12 @@ type Message struct {
 }
 
 func main() {
-	// tomorrow
 	servingDate := time.Now().AddDate(0, 0, 1).Format("01/02/2006")
-	println(servingDate)
-	str := "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate=%s&ServingLine=Standard%20Line&MealType=Lunch"
+	log.Printf("Loading menu for %s", servingDate)
+
+	str := "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate=%s&ServingLine=Standard%%20Line&MealType=Lunch"
 	str = fmt.Sprintf(str, servingDate)
+	log.Printf("URL: %s", str)
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodGet, str, nil)
 	if err != nil {
@@ -100,13 +101,14 @@ func main() {
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
-	lunch := ""
+	lunch := fmt.Sprintf("Lunch for %s\r\n", servingDate)
 	for _, v := range g.LUNCH {
 		lunch = lunch + "\r\n" + v.MenuItemDescription
 	}
 
 	fmt.Println(lunch)
-	telegram_url := "https://api.telegram.org/bot1388326080:AAEZUaFgITw1PoRT5ae0JiUlTV8NT_TUDbo/sendMessage"
+	botToken := "1388326080:AAFGxulzcVRIJwSCcQr1pGjddyOwvC5_Fe0"
+	telegram_url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 	fmt.Println(telegram_url)
 
 	// Create a new message.
