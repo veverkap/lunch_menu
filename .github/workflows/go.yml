@@ -26,3 +26,18 @@ jobs:
         pip install -r requirements.txt
     - name: Run it
       run: python runner.py
+
+  ruby:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+    - name: Install dependencies
+      run: |
+        gem install bundler
+        bundle install
+    - name: Run it
+      run: ruby runner.rb
