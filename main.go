@@ -25,11 +25,12 @@ type Message struct {
 }
 
 func main() {
-	servingDate := time.Now().AddDate(0, 0, 1).Format("01/02/2006")
+	servingDate := time.Now().AddDate(0, 0, 1)
 	log.Printf("Loading menu for %s", servingDate)
 
 	str := "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate="
-	str = str + "12%2F16%2F2022"
+	str = str + servingDate.Format("01/02/2006")
+
 	str = str + "&ServingLine=Standard%20Line&MealType=Lunch"
 	fmt.Println(str)
 
@@ -68,12 +69,12 @@ func main() {
 	telegram_url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 	fmt.Println(telegram_url)
 
-	// Create a new message.
-	message := &Message{
-		ChatID: -1001675706309,
-		Text:   lunch,
-	}
-	SendMessage(telegram_url, message)
+	// // Create a new message.
+	// message := &Message{
+	// 	ChatID: -1001675706309,
+	// 	Text:   lunch,
+	// }
+	// SendMessage(telegram_url, message)
 }
 
 // SendMessage sends a message to given URL.
