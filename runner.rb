@@ -13,7 +13,7 @@ end
 
 def send_to_telegram(message)
   apiToken = "1388326080:AAFGxulzcVRIJwSCcQr1pGjddyOwvC5_Fe0"
-  chatID = '-1001675706309'
+  chatID = '-700546479'
   apiURL = "https://api.telegram.org/bot#{apiToken}/sendMessage"
 
   # post to url
