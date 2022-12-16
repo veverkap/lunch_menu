@@ -18,6 +18,7 @@ school_id = "ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba"
 serving_date = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%m/%d/%Y")
 # serving_date = datetime.date.today().strftime("%m/%d/%Y")
 url = f"https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId={school_id}&ServingDate={serving_date}&ServingLine=Standard%20Line&MealType=Lunch"
+print(url)
 r = requests.get(url)
 data = r.json()
 print(data)
