@@ -9,7 +9,7 @@ serving_date = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%m
 url = f"https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId={school_id}&ServingDate={serving_date}&ServingLine=Standard%20Line&MealType=Lunch"
 r = requests.get(url)
 data = r.json()
-
+print(data)
 message = f"The lunch menu for {serving_date} is:\r\n\r\n"
 
 for item in data["LUNCH"]:
