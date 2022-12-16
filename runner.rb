@@ -11,4 +11,4 @@ date = Time.now + 86400
 
 url = "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate=12%2016%202022&ServingLine=Standard%20Line&MealType=Lunch"
 page_content = open(url)
-puts page_content
+puts page_content["LUNCH"]
