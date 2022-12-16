@@ -75,10 +75,9 @@ func main() {
 	servingDate := time.Now().AddDate(0, 0, 1).Format("01/02/2006")
 	log.Printf("Loading menu for %s", servingDate)
 
+	value := url.QueryEscape(servingDate)
 	str := "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate=%s&ServingLine=Standard%%20Line&MealType=Lunch"
-	str = fmt.Sprintf(str, servingDate)
-	str = url.PathEscape(str)
-	log.Printf("URL: %s", str)
+	str = fmt.Sprintf(str, value)
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodGet, str, nil)
 	if err != nil {
@@ -103,7 +102,7 @@ func main() {
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
-	lunch := fmt.Sprintf("Lunch for %s\r\n", servingDate)
+	lunch := fmt.Sprintf("Lunch for %s", servingDate)
 	for _, v := range g.LUNCH {
 		lunch = lunch + "\r\n" + v.MenuItemDescription
 	}
