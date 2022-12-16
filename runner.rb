@@ -2,6 +2,7 @@ require 'net/http'
 require 'uri'
 require 'json'
 require 'date'
+require 'time'
 
 def open(url)
   Net::HTTP.get(URI.parse(url))
@@ -23,9 +24,11 @@ end
 
 school_id = "ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba"
 # load tomorrow's date
+ENV['TZ'] = 'America/New_York'
 date = Date.today + 1
-
+puts date
 url = "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate=12%2016%202022&ServingLine=Standard%20Line&MealType=Lunch"
+puts url
 page_content = open(url)
 values = JSON.parse(page_content)
 
@@ -36,4 +39,7 @@ lunch.each do |item|
   message += "#{item["MenuItemDescription"]}\r\n"
 end
 puts message
-send_to_telegram(message)
+t = Time.now                # 2014-07-30 18:30:00 UTC
+t + Time.zone_offset('EST') # 2014-07-30 13:30:00 UTC
+puts t
+# send_to_telegram(message)
