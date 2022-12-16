@@ -3,6 +3,9 @@ require 'uri'
 require 'json'
 require 'date'
 require 'time'
+require 'LOGGER'
+
+LOGGER = Logger.new(STDOUT)
 
 def open(url)
   Net::HTTP.get(URI.parse(url))
@@ -20,16 +23,28 @@ def send_to_telegram(message)
   request = Net::HTTP::Post.new(uri.request_uri)
   request.set_form_data({"chat_id" => chatID, "text" => message})
   response = https.request(request)
+  LOGGER.info "Response: #{response.body}"
 end
 
 school_id = "ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba"
 # load tomorrow's date
 ENV['TZ'] = 'America/New_York'
 date = Date.today + 1
-puts date
+
+LOGGER.info "Processing date #{date}"
+if date.saturday? || date.sunday?
+  send_to_telegram("Skipping weekend")
+  LOGGER.info "Skipping weekend"
+  exit
+end
+
 url = "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate=12%2016%202022&ServingLine=Standard%20Line&MealType=Lunch"
-puts url
+
+LOGGER.info "Loading #{url}"
+
 page_content = open(url)
+
+LOGGER.info "Parsing JSON of #{page_content}"
 values = JSON.parse(page_content)
 
 message = "Lunch for #{date.strftime("%A, %B %d, %Y")} is: \r\n\r\n"
@@ -38,8 +53,7 @@ lunch = values["LUNCH"]
 lunch.each do |item|
   message += "#{item["MenuItemDescription"]}\r\n"
 end
-puts message
-t = Time.now                # 2014-07-30 18:30:00 UTC
-t + Time.zone_offset('EST') # 2014-07-30 13:30:00 UTC
-puts t
-# send_to_telegram(message)
+
+LOGGER.info "Sending message: \r\n-----\r\n#{message}"
+
+send_to_telegram(message)
