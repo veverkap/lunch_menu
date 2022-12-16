@@ -29,7 +29,7 @@ func main() {
 	log.Printf("Loading menu for %s", servingDate)
 
 	str := "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate="
-	str = str + string(servingDate)
+	str = str + "12%2F16%2F2022"
 	str = str + "&ServingLine=Standard%20Line&MealType=Lunch"
 	fmt.Println(str)
 
@@ -69,11 +69,11 @@ func main() {
 	fmt.Println(telegram_url)
 
 	// Create a new message.
-	// message := &Message{
-	// ChatID: -1001675706309,
-	// Text:   lunch,
-	// }
-	// SendMessage(telegram_url, message)
+	message := &Message{
+		ChatID: -1001675706309,
+		Text:   lunch,
+	}
+	SendMessage(telegram_url, message)
 }
 
 // SendMessage sends a message to given URL.
