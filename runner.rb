@@ -33,7 +33,6 @@ date = Date.today + 1
 
 LOGGER.info "Processing date #{date}"
 if date.saturday? || date.sunday?
-  send_to_telegram("Skipping weekend")
   LOGGER.info "Skipping weekend"
   exit
 end
