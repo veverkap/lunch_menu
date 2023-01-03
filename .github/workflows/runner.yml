@@ -14,6 +14,9 @@ on:
 jobs:
   ruby:
     runs-on: ubuntu-latest
+    env:
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
     steps:
     - uses: actions/checkout@v3
 
@@ -25,7 +28,4 @@ jobs:
         gem install bundler
         bundle install
     - name: Run it
-      env:
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       run: ruby runner.rb
