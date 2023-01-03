@@ -31,7 +31,7 @@ end
 school_id = "ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba"
 # load tomorrow's date
 ENV['TZ'] = 'America/New_York'
-date = Date.today + 1
+date = Date.today
 
 LOGGER.info "Processing date #{date}"
 if date.saturday? || date.sunday?
