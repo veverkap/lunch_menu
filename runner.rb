@@ -14,7 +14,6 @@ def open(url)
 end
 
 def send_to_telegram(message)
-  puts ENV.inspect
   apiToken = ENV["TELEGRAM_TOKEN"]
   chatID   = ENV["TELEGRAM_CHAT_ID"]
   apiURL   = "https://api.telegram.org/bot#{apiToken}/sendMessage"
