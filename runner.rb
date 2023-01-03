@@ -14,6 +14,7 @@ def open(url)
 end
 
 def send_to_telegram(message)
+  puts ENV.inspect
   apiToken = ENV["TELEGRAM_TOKEN"]
   chatID   = ENV["TELEGRAM_CHAT_ID"]
   apiURL   = "https://api.telegram.org/bot#{apiToken}/sendMessage"
@@ -52,7 +53,7 @@ LOGGER.info "Loading #{url.string}"
 
 page_content = open(url.string)
 
-LOGGER.info "Parsing JSON of #{page_content}"
+LOGGER.info "Parsing JSON"# of #{page_content}"
 values = JSON.parse(page_content)
 
 message = "Lunch for #{date.strftime("%A, %B %d, %Y")} is: \r\n\r\n"
