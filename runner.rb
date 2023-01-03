@@ -29,7 +29,6 @@ def send_to_telegram(message)
 end
 
 school_id = "ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba"
-# load tomorrow's date
 ENV['TZ'] = 'America/New_York'
 date = Date.today
 
@@ -38,7 +37,6 @@ if date.saturday? || date.sunday?
   LOGGER.info "Skipping weekend"
   exit
 end
-
 
 url = StringIO.new
 

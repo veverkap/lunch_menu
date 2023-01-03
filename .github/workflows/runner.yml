@@ -22,15 +22,9 @@ jobs:
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.0'
-    - name: Environmental Variables
-      run: env
     - name: Install dependencies
       run: |
         gem install bundler
         bundle install
     - name: Run it
       run: ruby runner.rb
-      env:
-        LARGE_SECRET_PASSPHRASE: ${{ secrets.TELEGRAM_TOKEN }}
-    - name: Test printing your secret (Remove this step in production)
-      run: cat $HOME/secrets/my_secret.json
