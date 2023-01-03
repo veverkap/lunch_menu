@@ -4,6 +4,8 @@ require 'json'
 require 'date'
 require 'time'
 require 'logger'
+require 'stringio'
+require 'cgi'
 
 LOGGER = Logger.new(STDOUT)
 
@@ -12,9 +14,9 @@ def open(url)
 end
 
 def send_to_telegram(message)
-  apiToken = "1388326080:AAFGxulzcVRIJwSCcQr1pGjddyOwvC5_Fe0"
-  chatID = '-700546479'
-  apiURL = "https://api.telegram.org/bot#{apiToken}/sendMessage"
+  apiToken = ENV["TELEGRAM_TOKEN"]
+  chatID   = ENV["TELEGRAM_CHAT_ID"]
+  apiURL   = "https://api.telegram.org/bot#{apiToken}/sendMessage"
 
   # post to url
   uri = URI.parse(apiURL)
@@ -37,11 +39,18 @@ if date.saturday? || date.sunday?
   exit
 end
 
-url = "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId=ccff3367-7f5f-4a0d-a8cf-89e1afafe4ba&ServingDate=12%2016%202022&ServingLine=Standard%20Line&MealType=Lunch"
 
-LOGGER.info "Loading #{url}"
+url = StringIO.new
 
-page_content = open(url)
+url << "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId="
+url << school_id
+url << "&ServingDate="
+url << CGI.escape(date.strftime("%m/%d/%Y"))#"12%2016%202022"
+url << "&ServingLine=Standard%20Line&MealType=Lunch"
+
+LOGGER.info "Loading #{url.string}"
+
+page_content = open(url.string)
 
 LOGGER.info "Parsing JSON of #{page_content}"
 values = JSON.parse(page_content)
