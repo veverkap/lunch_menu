@@ -40,11 +40,9 @@ end
 
 url = StringIO.new
 
-url << "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitems?SchoolId="
-url << school_id
-url << "&ServingDate="
-url << CGI.escape(date.strftime("%m/%d/%Y"))#"12%2016%202022"
-url << "&ServingLine=Standard%20Line&MealType=Lunch"
+url << "https://cpschools.api.nutrislice.com/menu/api/weeks/school/southeastern-elementary/menu-type/lunch/"
+url << date.strftime("%Y/%m/%d")
+url << "?format=json"
 
 LOGGER.info "Loading #{url.string}"
 
@@ -55,9 +53,31 @@ values = JSON.parse(page_content)
 
 message = "Lunch for #{date.strftime("%A, %B %d, %Y")} is: \r\n\r\n"
 
-lunch = values["LUNCH"]
-lunch.each do |item|
-  message += "#{item["MenuItemDescription"]}\r\n"
+search_date = date.strftime("%Y-%m-%d")
+
+nl = true
+values["days"].each do |day|
+  if day["date"] == search_date
+    day["menu_items"].each do |item|
+      if item["is_section_title"]
+        message << "\r\n#{item["text"]}\r\n"
+      end
+      if item.key?("food")
+        food = item["food"]
+        if food.nil?
+          if item.key?("text") && item["text"] == "with"
+            message << " with "
+            nl = false
+          end
+        else
+          if food.key?("name")
+            message << food["name"]
+            message << "\r\n" unless nl
+          end
+        end
+      end
+    end
+  end
 end
 
 LOGGER.info "Sending message: \r\n-----\r\n#{message}"
