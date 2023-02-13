@@ -48,6 +48,8 @@ end
 ENV['TZ'] = 'America/New_York'
 date = Date.today
 
+LOGGER.debug "Today is #{date} / ENV is #{ENV.inspect}"
+
 LOGGER.info "Processing date #{date}"
 
 if date.saturday? || date.sunday?
@@ -77,29 +79,38 @@ menu_items = {}
 current_section = nil
 has_with = false
 
+LOGGER.info "Processing menu items"
 values["days"].each do |day|
+  LOGGER.info "Processing day #{day["date"]}"
   if day["date"] == search_date
+    LOGGER.info "Found search date #{day["date"]}"
     day["menu_items"].each do |item|
       if item["is_section_title"]
+        LOGGER.info "Found section #{item["text"]}"
         current_section = item["text"].gsub("Choose One", "").gsub("-", "").strip
         menu_items[current_section] = []
       else
         next if current_section.nil?
 
         if item.key?("food")
+          LOGGER.info "Found food #{item["food"]}"
           food = item["food"]
 
           if food.nil?
             if item.key?("text") && item["text"] == "with"
+              LOGGER.info "Found with"
               menu_items[current_section][-1] = menu_items[current_section].last + " with"
               has_with = true
             end
           else
             if food.key?("name")
+              LOGGER.info "Found food name #{food["name"]}"
               if has_with
+                LOGGER.info "Adding to last item"
                 menu_items[current_section][-1] = menu_items[current_section].last + " " + food["name"]
                 has_with = false
               else
+                LOGGER.info "Adding to new item"
                 menu_items[current_section] << food["name"]
               end
             end
@@ -109,6 +120,8 @@ values["days"].each do |day|
     end
   end
 end
+
+LOGGER.info "Building message"
 menu_items.each do |section, items|
   message << "#{section}: \r\n"
   items.each do |item|
@@ -119,7 +132,7 @@ end
 
 LOGGER.info "Sending message: \r\n-----\r\n#{message}"
 
-send_to_telegram(message)
+# send_to_telegram(message)
 
 puts "Sending to emails: #{ENV["EMAIL_ADDRESSES"]}"
 email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
