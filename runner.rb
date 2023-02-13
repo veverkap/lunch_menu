@@ -121,6 +121,7 @@ LOGGER.info "Sending message: \r\n-----\r\n#{message}"
 
 send_to_telegram(message)
 
+puts "Sending to emails: #{ENV["EMAIL_ADDRESSES"]}"
 email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
 
 email_addresses.each do |email|
