@@ -133,7 +133,7 @@ send_to_telegram(message)
 
 email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
 
-Logger.info "Sending to #{email_addresses.count} email addresses"
+LOGGER.info "Sending to #{email_addresses.count} email addresses"
 
 email_addresses.each do |email|
   send_to_email(email, message)

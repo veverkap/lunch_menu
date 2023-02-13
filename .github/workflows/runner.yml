@@ -4,9 +4,9 @@
 name: Runner
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '5 6 * * *'
