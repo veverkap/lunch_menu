@@ -15,6 +15,7 @@ def open(url)
 end
 
 def send_to_telegram(message)
+  LOGGER.info "Sending to Telegram"
   apiToken = ENV["TELEGRAM_TOKEN"]
   chatID   = ENV["TELEGRAM_CHAT_ID"]
   apiURL   = "https://api.telegram.org/bot#{apiToken}/sendMessage"
@@ -48,8 +49,6 @@ end
 ENV['TZ'] = 'America/New_York'
 date = Date.today
 
-LOGGER.debug "Today is #{date} / ENV is #{ENV.inspect}"
-
 LOGGER.info "Processing date #{date}"
 
 if date.saturday? || date.sunday?
@@ -81,7 +80,6 @@ has_with = false
 
 LOGGER.info "Processing menu items"
 values["days"].each do |day|
-  LOGGER.info "Processing day #{day["date"]}"
   if day["date"] == search_date
     LOGGER.info "Found search date #{day["date"]}"
     day["menu_items"].each do |item|
@@ -93,7 +91,6 @@ values["days"].each do |day|
         next if current_section.nil?
 
         if item.key?("food")
-          LOGGER.info "Found food #{item["food"]}"
           food = item["food"]
 
           if food.nil?
@@ -132,10 +129,11 @@ end
 
 LOGGER.info "Sending message: \r\n-----\r\n#{message}"
 
-# send_to_telegram(message)
+send_to_telegram(message)
 
-puts "Sending to emails: #{ENV["EMAIL_ADDRESSES"]}"
 email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
+
+Logger.info "Sending to #{email_addresses.count} email addresses"
 
 email_addresses.each do |email|
   send_to_email(email, message)
