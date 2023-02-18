@@ -47,7 +47,7 @@ def send_to_email(email, message)
 end
 
 ENV['TZ'] = 'America/New_York'
-date = Date.today
+date = Date.today + 1
 
 LOGGER.info "Processing date #{date}"
 
