@@ -168,7 +168,7 @@ salem = load_salem_details(date)
 LOGGER.info "Sending message for Chesapeake: \r\n-----\r\n#{chesapeake}"
 LOGGER.info "Sending message for Salem: \r\n-----\r\n#{salem}"
 
-if chesapeake.nil? || chesapeake.empty?
+if chesapeake.nil? || chesapeake.empty? || ENV["SKIP_CHESAPEAKE"]
   LOGGER.info "No message for Chesapeake, skipping"
 else
   send_to_telegram(chesapeake, TELEGRAM_CHAT_ID)
@@ -182,7 +182,7 @@ else
   end
 end
 
-if salem.nil? || salem.empty?
+if salem.nil? || salem.empty? || ENV["SKIP_SALEM"]
   LOGGER.info "No message for Salem, skipping"
 else
   send_to_telegram(salem, TELEGRAM_SALEM_CHAT_ID)
