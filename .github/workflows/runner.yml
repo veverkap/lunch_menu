@@ -5,9 +5,26 @@ name: Runner
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+        - info
+        - warning
+        - debug
+      skip_chesapeake:
+        description: 'Whether to skip Chesapeake'
+        required: false
+        default: true
+        type: boolean
+      skip_salem:
+        description: 'Whether to skip Salem'
+        required: false
+        default: true
+        type: boolean
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '5 20 * * *'
@@ -16,10 +33,14 @@ jobs:
   ruby:
     runs-on: ubuntu-latest
     env:
+      TELEGRAM_SALEM_CHAT_ID: ${{ secrets.TELEGRAM_SALEM_CHAT_ID }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       EMAIL_ADDRESSES: ${{ secrets.EMAIL_ADDRESSES }}
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+      LEVEL: ${{ inputs.logLevel }}
+      SKIP_CHESAPEAKE: ${{ inputs.skip_chesapeake }}
+      SKIP_SALEM: ${{ inputs.skip_salem }}
     steps:
     - uses: actions/checkout@v3
     - uses: ruby/setup-ruby@v1

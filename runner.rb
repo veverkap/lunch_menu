@@ -10,6 +10,8 @@ require 'uri'
 
 TELEGRAM_SALEM_CHAT_ID = ENV["TELEGRAM_SALEM_CHAT_ID"]
 TELEGRAM_CHAT_ID       = ENV["TELEGRAM_CHAT_ID"]
+SKIP_CHESAPEAKE        = ENV["SKIP_CHESAPEAKE"] == "true"
+SKIP_SALEM             = ENV["SKIP_SALEM"] == "true"
 
 LOGGER = Logger.new(STDOUT)
 
@@ -159,9 +161,7 @@ if date.saturday? || date.sunday?
   LOGGER.info "Skipping weekend"
   exit
 end
-puts TELEGRAM_SALEM_CHAT_ID
-puts TELEGRAM_CHAT_ID
-exit
+
 chesapeake = load_chesapeake_details(date)
 salem = load_salem_details(date)
 
@@ -170,20 +170,20 @@ LOGGER.info "Sending message for Salem: \r\n-----\r\n#{salem}"
 
 if chesapeake.nil? || chesapeake.empty?
   LOGGER.info "No message for Chesapeake, skipping"
-  exit
+else
+  send_to_telegram(chesapeake, TELEGRAM_CHAT_ID)
+
+  email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
+
+  LOGGER.info "Sending to #{email_addresses.count} email addresses"
+
+  email_addresses.each do |email|
+    send_to_email(email, chesapeake)
+  end
 end
 
 if salem.nil? || salem.empty?
   LOGGER.info "No message for Salem, skipping"
-end
-
-send_to_telegram(chesapeake, TELEGRAM_CHAT_ID)
-send_to_telegram(salem, TELEGRAM_SALEM_CHAT_ID)
-
-email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
-
-LOGGER.info "Sending to #{email_addresses.count} email addresses"
-
-email_addresses.each do |email|
-  send_to_email(email, chesapeake)
+else
+  send_to_telegram(salem, TELEGRAM_SALEM_CHAT_ID)
 end
