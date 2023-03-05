@@ -18,12 +18,12 @@ on:
       skip_chesapeake:
         description: 'Whether to skip Chesapeake'
         required: false
-        default: true
+        default: false
         type: boolean
       skip_salem:
         description: 'Whether to skip Salem'
         required: false
-        default: true
+        default: false
         type: boolean
   schedule:
     # * is a special character in YAML so you have to quote this string
