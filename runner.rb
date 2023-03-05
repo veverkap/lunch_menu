@@ -159,7 +159,9 @@ if date.saturday? || date.sunday?
   LOGGER.info "Skipping weekend"
   exit
 end
-
+puts TELEGRAM_SALEM_CHAT_ID
+puts TELEGRAM_CHAT_ID
+exit
 chesapeake = load_chesapeake_details(date)
 salem = load_salem_details(date)
 
