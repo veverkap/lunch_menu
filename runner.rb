@@ -13,6 +13,7 @@ TELEGRAM_CHAT_ID       = ENV["TELEGRAM_CHAT_ID"]
 SKIP_CHESAPEAKE        = ENV["SKIP_CHESAPEAKE"] == "true"
 SKIP_SALEM             = ENV["SKIP_SALEM"] == "true"
 
+# loading logger
 LOGGER = Logger.new(STDOUT)
 
 def open(url)
