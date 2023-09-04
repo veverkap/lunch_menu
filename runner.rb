@@ -8,10 +8,12 @@ require 'stringio'
 require 'time'
 require 'uri'
 
-TELEGRAM_SALEM_CHAT_ID = ENV["TELEGRAM_SALEM_CHAT_ID"]
-TELEGRAM_CHAT_ID       = ENV["TELEGRAM_CHAT_ID"]
-SKIP_CHESAPEAKE        = ENV["SKIP_CHESAPEAKE"] == "true"
-SKIP_SALEM             = ENV["SKIP_SALEM"] == "true"
+TELEGRAM_SALEM_CHAT_ID     = ENV["TELEGRAM_SALEM_CHAT_ID"]
+TELEGRAM_LANDSTOWN_CHAT_ID = ENV["TELEGRAM_LANDSTOWN_CHAT_ID"]
+TELEGRAM_CHAT_ID           = ENV["TELEGRAM_CHAT_ID"]
+SKIP_CHESAPEAKE            = ENV["SKIP_CHESAPEAKE"] == "true"
+SKIP_SALEM                 = ENV["SKIP_SALEM"] == "true"
+SKIP_LANDSTOWN             = ENV["SKIP_LANDSTOWN"] == "true"
 
 # loading logger
 LOGGER = Logger.new(STDOUT)
@@ -126,8 +128,7 @@ def load_chesapeake_details(date)
   message
 end
 
-def load_salem_details(date)
-  school_id = "4fc4596f-ac21-42b6-a9a5-4a24282ce4e7"
+def load_vb_details(date, school_id="4fc4596f-ac21-42b6-a9a5-4a24282ce4e7")
   ENV['TZ'] = 'America/New_York'
   url = StringIO.new
 
@@ -164,10 +165,12 @@ if date.saturday? || date.sunday?
 end
 
 chesapeake = load_chesapeake_details(date)
-salem = load_salem_details(date)
+salem = load_vb_details(date, "4fc4596f-ac21-42b6-a9a5-4a24282ce4e7")
+landstown = load_vb_details(date, "03add780-f720-415f-9727-428952914a60")
 
 LOGGER.info "Sending message for Chesapeake: \r\n-----\r\n#{chesapeake}"
 LOGGER.info "Sending message for Salem: \r\n-----\r\n#{salem}"
+LOGGER.info "Sending message for Landstown: \r\n-----\r\n#{landstown}"
 
 if chesapeake.nil? || chesapeake.empty? || ENV["SKIP_CHESAPEAKE"] == 1
   LOGGER.info "No message for Chesapeake, skipping"
@@ -187,4 +190,10 @@ if salem.nil? || salem.empty? || ENV["SKIP_SALEM"] == 1
   LOGGER.info "No message for Salem, skipping"
 else
   send_to_telegram(salem, TELEGRAM_SALEM_CHAT_ID)
+end
+
+if landstown.nil? || landstown.empty? || ENV["SKIP_LANDSTOWN"] == 1
+  LOGGER.info "No message for Landstown, skipping"
+else
+  send_to_telegram(landstown, TELEGRAM_LANDSTOWN_CHAT_ID)
 end
