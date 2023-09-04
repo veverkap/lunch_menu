@@ -8,12 +8,12 @@ require 'stringio'
 require 'time'
 require 'uri'
 
-TELEGRAM_SALEM_CHAT_ID     = ENV["TELEGRAM_SALEM_CHAT_ID"]
-TELEGRAM_LANDSTOWN_CHAT_ID = ENV["TELEGRAM_LANDSTOWN_CHAT_ID"]
-TELEGRAM_CHAT_ID           = ENV["TELEGRAM_CHAT_ID"]
-SKIP_CHESAPEAKE            = ENV["SKIP_CHESAPEAKE"] == "true"
-SKIP_SALEM                 = ENV["SKIP_SALEM"] == "true"
-SKIP_LANDSTOWN             = ENV["SKIP_LANDSTOWN"] == "true"
+TELEGRAM_SALEM_CHAT_ID      = ENV["TELEGRAM_SALEM_CHAT_ID"]
+TELEGRAM_LANDSTOWN_CHAT_ID  = ENV["TELEGRAM_LANDSTOWN_CHAT_ID"]
+TELEGRAM_CHESAPEAKE_CHAT_ID = ENV["TELEGRAM_CHESAPEAKE_CHAT_ID"]
+SKIP_CHESAPEAKE             = ENV["SKIP_CHESAPEAKE"] == "true"
+SKIP_SALEM                  = ENV["SKIP_SALEM"] == "true"
+SKIP_LANDSTOWN              = ENV["SKIP_LANDSTOWN"] == "true"
 
 # loading logger
 LOGGER = Logger.new(STDOUT)
@@ -22,7 +22,7 @@ def open(url)
   Net::HTTP.get(URI.parse(url))
 end
 
-def send_to_telegram(message, chat=TELEGRAM_CHAT_ID)
+def send_to_telegram(message, chat=TELEGRAM_CHESAPEAKE_CHAT_ID)
   LOGGER.info "Sending to Telegram"
   apiToken = ENV["TELEGRAM_TOKEN"]
   chatID   = chat
@@ -175,7 +175,7 @@ LOGGER.info "Sending message for Landstown: \r\n-----\r\n#{landstown}"
 if chesapeake.nil? || chesapeake.empty? || ENV["SKIP_CHESAPEAKE"] == 1
   LOGGER.info "No message for Chesapeake, skipping"
 else
-  send_to_telegram(chesapeake, TELEGRAM_CHAT_ID)
+  send_to_telegram(chesapeake, TELEGRAM_CHESAPEAKE_CHAT_ID)
 
   email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
 

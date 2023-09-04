@@ -20,6 +20,11 @@ on:
         required: false
         default: false
         type: boolean
+      skip_landstown:
+        description: 'Whether to skip Landstown'
+        required: false
+        default: false
+        type: boolean        
       skip_salem:
         description: 'Whether to skip Salem'
         required: false
@@ -33,13 +38,15 @@ jobs:
   ruby:
     runs-on: ubuntu-latest
     env:
+      TELEGRAM_CHESAPEAKE_CHAT_ID: ${{ secrets.TELEGRAM_CHESAPEAKE_CHAT_ID }}
+      TELEGRAM_LANDSTOWN_CHAT_ID: ${{ secrets.TELEGRAM_LANDSTOWN_CHAT_ID }}
       TELEGRAM_SALEM_CHAT_ID: ${{ secrets.TELEGRAM_SALEM_CHAT_ID }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       EMAIL_ADDRESSES: ${{ secrets.EMAIL_ADDRESSES }}
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
       LEVEL: ${{ inputs.logLevel }}
       SKIP_CHESAPEAKE: ${{ inputs.skip_chesapeake }}
+      SKIP_LANDSTOWN: ${{ inputs.skip_landstown }}
       SKIP_SALEM: ${{ inputs.skip_salem }}
     steps:
     - uses: actions/checkout@v3
