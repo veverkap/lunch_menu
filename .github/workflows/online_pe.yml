@@ -1,0 +1,79 @@
+name: Check Page and Create PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+        - info
+        - warning
+        - debug  
+  schedule:
+cron: '0 9 * * *'  # Runs every day at 9 AM
+
+jobs:
+  check_page_and_create_pr:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install requests beautifulsoup4
+
+    - name: Check page for changes
+      run: |
+        import requests
+        from bs4 import BeautifulSoup
+        import hashlib
+        import os
+
+        url = 'https://virginiabeach.revtrak.net/rw-class-registrations/'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            content = soup.prettify()
+
+            # Calculate the hash of the page content
+            content_hash = hashlib.sha256(content.encode('utf-8')).hexdigest()
+
+            # Read the previous hash from the file, if it exists
+            hash_file = 'page_hash.txt'
+            if os.path.exists(hash_file):
+                with open(hash_file, 'r') as file:
+                    previous_hash = file.read().strip()
+            else:
+                previous_hash = ''
+
+            # Compare the current hash with the previous hash
+            if content_hash != previous_hash:
+                # Update the hash file with the new hash
+                with open(hash_file, 'w') as file:
+                    file.write(content_hash)
+
+                # Set the environment variable to indicate changes
+                print(f"::set-env name=has_changes::true")
+            else:
+                print("No changes detected.")
+        else:
+            print(f"Failed to fetch the page. Status code: {response.status_code}")
+
+    - name: Create pull request
+      if: env.has_changes == 'true'
+      uses: peter-evans/create-pull-request@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: 'Update based on page changes'
+        body: 'The monitored page has changed. This PR updates the repository accordingly.'
+        branch: 'page-updates'
+        base: 'main'
+        commit-message: 'Update repository based on page changes'
