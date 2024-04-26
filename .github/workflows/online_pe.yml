@@ -13,7 +13,8 @@ on:
         - warning
         - debug  
   schedule:
-cron: '0 9 * * *'  # Runs every day at 9 AM
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 20 * * *'
 
 jobs:
   check_page_and_create_pr:
