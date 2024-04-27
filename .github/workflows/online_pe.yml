@@ -1,6 +1,9 @@
 name: Check Page and Create PR
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       logLevel:
@@ -19,6 +22,8 @@ on:
 jobs:
   check_page_and_create_pr:
     runs-on: ubuntu-latest
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
     steps:
     - uses: actions/checkout@v3
