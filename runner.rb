@@ -8,11 +8,9 @@ require 'stringio'
 require 'time'
 require 'uri'
 
-TELEGRAM_SALEM_CHAT_ID      = ENV["TELEGRAM_SALEM_CHAT_ID"]
 TELEGRAM_LANDSTOWN_CHAT_ID  = ENV["TELEGRAM_LANDSTOWN_CHAT_ID"]
 TELEGRAM_CHESAPEAKE_CHAT_ID = ENV["TELEGRAM_CHESAPEAKE_CHAT_ID"]
 SKIP_CHESAPEAKE             = ENV["SKIP_CHESAPEAKE"] == "true"
-SKIP_SALEM                  = ENV["SKIP_SALEM"] == "true"
 SKIP_LANDSTOWN              = ENV["SKIP_LANDSTOWN"] == "true"
 
 # loading logger
@@ -54,76 +52,25 @@ def send_to_email(email, message)
   mg_client.send_message "mg.veverka.net", message_params
 end
 
-def load_chesapeake_details(date)
+def load_chesapeake_details(date, school_id="25128b5c-642c-461c-a224-3cc86a750b8f")
+  ENV['TZ'] = 'America/New_York'
   url = StringIO.new
-
-  url << "https://cpschools.api.nutrislice.com/menu/api/weeks/school/southeastern-elementary/menu-type/lunch/"
-  url << date.strftime("%Y/%m/%d")
-  url << "?format=json"
-
+  url << "https://webapis.schoolcafe.com/api/CalendarView/GetDailyMenuitemsByGrade?SchoolId=25128b5c-642c-461c-a224-3cc86a750b8f"#&ServingDate="
+  url << "&ServingDate="
+  url << CGI.escape(date.strftime("%m/%d/%Y"))#"12%2016%202022"
+  url << "&ServingLine=Main%20Line&MealType=Lunch&Grade=02&PersonId=null"
+  
   LOGGER.info "Loading #{url.string}"
 
   page_content = open(url.string)
 
   LOGGER.info "Parsing JSON"# of #{page_content}"
   values = JSON.parse(page_content)
-
   message = "Lunch for #{date.strftime("%A, %B %d, %Y")} is: \r\n\r\n"
 
-  search_date = date.strftime("%Y-%m-%d")
-
-  menu_items = {}
-
-  current_section = nil
-  has_with = false
-
-  LOGGER.info "Processing menu items"
-  values["days"].each do |day|
-    if day["date"] == search_date
-      LOGGER.info "Found search date #{day["date"]}"
-      day["menu_items"].each do |item|
-        if item["is_section_title"]
-          LOGGER.info "Found section #{item["text"]}"
-          current_section = item["text"].gsub("Choose One", "").gsub("-", "").strip
-          menu_items[current_section] = []
-        else
-          next if current_section.nil?
-
-          if item.key?("food")
-            food = item["food"]
-
-            if food.nil?
-              if item.key?("text") && item["text"] == "with"
-                LOGGER.info "Found with"
-                menu_items[current_section][-1] = menu_items[current_section].last + " with"
-                has_with = true
-              end
-            else
-              if food.key?("name")
-                LOGGER.info "Found food name #{food["name"]}"
-                if has_with
-                  LOGGER.info "Adding to last item"
-                  menu_items[current_section][-1] = menu_items[current_section].last + " " + food["name"]
-                  has_with = false
-                else
-                  LOGGER.info "Adding to new item"
-                  menu_items[current_section] << food["name"]
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-  end
-
-  LOGGER.info "Building message"
-  menu_items.each do |section, items|
-    message << "#{section}: \r\n"
-    items.each do |item|
-      message << "- #{item}\r\n"
-    end
-    message << "\r\n"
+  lunch = values["ENTREES"]
+  lunch.each do |item|
+    message += "#{item["MenuItemDescription"]}\r\n"
   end
   message
 end
@@ -164,12 +111,10 @@ if date.saturday? || date.sunday?
   exit
 end
 
-chesapeake = load_chesapeake_details(date)
-salem = load_vb_details(date, "4fc4596f-ac21-42b6-a9a5-4a24282ce4e7")
+chesapeake = load_chesapeake_details(date, "25128b5c-642c-461c-a224-3cc86a750b8f")
 landstown = load_vb_details(date, "03add780-f720-415f-9727-428952914a60")
 
 LOGGER.info "Sending message for Chesapeake: \r\n-----\r\n#{chesapeake}"
-LOGGER.info "Sending message for Salem: \r\n-----\r\n#{salem}"
 LOGGER.info "Sending message for Landstown: \r\n-----\r\n#{landstown}"
 
 if chesapeake.nil? || chesapeake.empty? || ENV["SKIP_CHESAPEAKE"] == 1
@@ -184,12 +129,6 @@ else
   email_addresses.each do |email|
     send_to_email(email, chesapeake)
   end
-end
-
-if salem.nil? || salem.empty? || ENV["SKIP_SALEM"] == 1
-  LOGGER.info "No message for Salem, skipping"
-else
-  send_to_telegram(salem, TELEGRAM_SALEM_CHAT_ID)
 end
 
 if landstown.nil? || landstown.empty? || ENV["SKIP_LANDSTOWN"] == 1
