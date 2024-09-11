@@ -27,7 +27,7 @@ on:
         type: boolean        
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '5 20 * * *'
+    - cron:  '5 14 * * *'
 
 jobs:
   ruby:
