@@ -120,10 +120,10 @@ LOGGER.info "Sending message for Landstown: \r\n-----\r\n#{landstown}"
 if chesapeake.nil? || chesapeake.empty? || ENV["SKIP_CHESAPEAKE"] == 1
   LOGGER.info "No message for Chesapeake, skipping"
 else
-  # send_to_telegram(chesapeake, TELEGRAM_CHESAPEAKE_CHAT_ID)
-  
+  send_to_telegram(chesapeake, TELEGRAM_CHESAPEAKE_CHAT_ID)
+
   email_addresses = ENV["EMAIL_ADDRESSES"].split(",")
-  LOGGER.info email_addresses
+
   LOGGER.info "Sending to #{email_addresses.count} email addresses"
 
   email_addresses.each do |email|
@@ -131,8 +131,8 @@ else
   end
 end
 
-# if landstown.nil? || landstown.empty? || ENV["SKIP_LANDSTOWN"] == 1
-#   LOGGER.info "No message for Landstown, skipping"
-# else
-#   send_to_telegram(landstown, TELEGRAM_LANDSTOWN_CHAT_ID)
-# end
+if landstown.nil? || landstown.empty? || ENV["SKIP_LANDSTOWN"] == 1
+  LOGGER.info "No message for Landstown, skipping"
+else
+  send_to_telegram(landstown, TELEGRAM_LANDSTOWN_CHAT_ID)
+end
