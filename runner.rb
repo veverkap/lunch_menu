@@ -74,7 +74,12 @@ def load_chesapeake_details(date, school_id="25128b5c-642c-461c-a224-3cc86a750b8
 end
 
 ENV['TZ'] = 'America/New_York'
+passed_date = ENV["DATE"]
 date = Date.today + 1
+
+if passed_date
+  date = Date.parse(passed_date)
+end
 
 LOGGER.info "Processing date #{date}"
 
