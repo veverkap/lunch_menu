@@ -23,5 +23,7 @@ jobs:
         run: go get .
       - name: Build
         run: go build -v ./...
+      - name: List files
+        run: ls -la
       - name: Test with the Go CLI
         run: go test
