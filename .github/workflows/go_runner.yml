@@ -1,0 +1,22 @@
+name: Go
+
+on:
+  workflow_dispatch:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '5 14 * * *'    
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      TELEGRAM_CHESAPEAKE_CHAT_ID: ${{ secrets.TELEGRAM_CHESAPEAKE_CHAT_ID }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go 
+        uses: actions/setup-go@v5
+      # You can test your matrix by printing the current Go version
+      - name: Display Go version
+        run: go version
