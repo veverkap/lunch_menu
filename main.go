@@ -42,6 +42,10 @@ func main() {
 		logger.Error("TELEGRAM_BOT_TOKEN not set")
 		return
 	}
+	logger = logger.With(
+		slog.String("chat_id", telegramChesapeakeChatID),
+		slog.String("bot_token", telegramToken),
+	)
 	logger.Info("Chesapeake chat ID", "id", telegramChesapeakeChatID)
 	logger.Info("Telegram bot token", "token", telegramToken)
 
