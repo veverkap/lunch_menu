@@ -37,9 +37,9 @@ func main() {
 		logger.Error("TELEGRAM_CHESAPEAKE_CHAT_ID not set")
 		return
 	}
-	telegramToken = os.Getenv("TELEGRAM_BOT_TOKEN")
+	telegramToken = os.Getenv("TELEGRAM_TOKEN")
 	if telegramToken == "" {
-		logger.Error("TELEGRAM_BOT_TOKEN not set")
+		logger.Error("TELEGRAM_TOKEN not set")
 		return
 	}
 
