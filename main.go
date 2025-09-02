@@ -42,12 +42,6 @@ func main() {
 		logger.Error("TELEGRAM_BOT_TOKEN not set")
 		return
 	}
-	logger = logger.With(
-		slog.String("chat_id", telegramChesapeakeChatID),
-		slog.String("bot_token", telegramToken),
-	)
-	logger.Info("Chesapeake chat ID", "id", telegramChesapeakeChatID)
-	logger.Info("Telegram bot token", "token", telegramToken)
 
 	// get the current time in the America/New_York time zone
 	loc, err := time.LoadLocation("America/New_York")
@@ -55,26 +49,32 @@ func main() {
 		logger.Error("Failed to load location", "location", "America/New_York", "error", err)
 		return
 	}
-	// now := time.Now().In(loc)
-	now := time.Date(2025, 9, 3, 12, 0, 0, 0, loc) // for testing
+	now := time.Now().In(loc)
+	tomorrow := now.AddDate(0, 0, 1)
+	// now := time.Date(2025, 9, 3, 12, 0, 0, 0, loc) // for testing
+
+	logger = logger.With(
+		slog.Time("now", now),
+		slog.Time("tomorrow", tomorrow),
+	)
 
 	telegramMessages := strings.Builder{}
 
 	for _, school := range schools {
-		lunchMenu, err := getLunchMenuForSchool(now, school)
+		lunchMenu, err := getLunchMenuForSchool(tomorrow, school)
 		if err != nil {
 			logger.Error("Failed to get lunch menu", "school", school.Name, "error", err)
 			continue
 		}
 		logger.Info("Lunch menu", "school", school.Name, "menu", lunchMenu)
-		telegramMessages.WriteString(fmt.Sprintf("%s:\n%s\n\n", school.Name, lunchMenu))
+		telegramMessages.WriteString(fmt.Sprintf("*%s*:\n%s\n", school.Name, lunchMenu))
 	}
 	if telegramMessages.Len() == 0 {
 		logger.Warn("No lunch menus found for any school")
 		return
 	}
 	telegramMessage := strings.Builder{}
-	telegramMessage.WriteString(fmt.Sprintf("Lunch menu for %s:\n\n", now.Format("01/02/2006")))
+	telegramMessage.WriteString(fmt.Sprintf("Lunch menu for %s:\n\n", tomorrow.Format("01/02/2006")))
 	telegramMessage.WriteString(telegramMessages.String())
 
 	if err := sendTelegramMessage(telegramMessage.String()); err != nil {
@@ -84,20 +84,20 @@ func main() {
 }
 
 func sendTelegramMessage(message string) error {
-	// url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", os.Getenv("TELEGRAM_BOT_TOKEN"))
-	// payload := fmt.Sprintf(`{"chat_id":"%s","text":"%s","parse_mode":"Markdown"}`, telegramChesapeakeChatID, message)
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", telegramToken)
+	payload := fmt.Sprintf(`{"chat_id":"%s","text":"%s","parse_mode":"Markdown"}`, telegramChesapeakeChatID, message)
 
-	// resp, err := http.Post(url, "application/json", strings.NewReader(payload))
-	// if err != nil {
-	// 	logger.Error("Failed to send Telegram message", "error", err)
-	// 	return err
-	// }
-	// defer resp.Body.Close()
+	resp, err := http.Post(url, "application/json", strings.NewReader(payload))
+	if err != nil {
+		logger.Error("Failed to send Telegram message", "error", err)
+		return err
+	}
+	defer resp.Body.Close()
 
-	// if resp.StatusCode != http.StatusOK {
-	// 	logger.Error("Failed to send Telegram message", "status", resp.Status)
-	// 	return fmt.Errorf("failed to send Telegram message: %s", resp.Status)
-	// }
+	if resp.StatusCode != http.StatusOK {
+		logger.Error("Failed to send Telegram message", "status", resp.Status)
+		return fmt.Errorf("failed to send Telegram message: %s", resp.Status)
+	}
 
 	return nil
 }
