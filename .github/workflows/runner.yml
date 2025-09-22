@@ -30,7 +30,6 @@ jobs:
     env:
       TELEGRAM_CHESAPEAKE_CHAT_ID: ${{ secrets.TELEGRAM_CHESAPEAKE_CHAT_ID }}
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-      EMAIL_ADDRESSES: ${{ secrets.EMAIL_ADDRESSES }}
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
       LEVEL: ${{ inputs.logLevel }}
       SKIP_CHESAPEAKE: ${{ inputs.skip_chesapeake }}
