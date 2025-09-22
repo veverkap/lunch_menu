@@ -49,7 +49,10 @@ func main() {
 		logger.Error("Failed to load location", "location", "America/New_York", "error", err)
 		return
 	}
+	// we want just the date, so set the time to noon to avoid any DST issues
 	now := time.Now().In(loc)
+	now = time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, loc)
+	// get tomorrow's date
 	tomorrow := now.AddDate(0, 0, 1)
 	// now := time.Date(2025, 9, 3, 12, 0, 0, 0, loc) // for testing
 
@@ -73,9 +76,17 @@ func main() {
 		logger.Warn("No lunch menus found for any school")
 		return
 	}
+
+	weather, err := getTomorrowsWeather(tomorrow)
+	if err != nil {
+		logger.Error("Failed to get weather", "error", err)
+	} else if weather != "" {
+		telegramMessages.WriteString(fmt.Sprintf("*Weather*:\n%s\n", weather))
+	}
 	telegramMessage := strings.Builder{}
 	telegramMessage.WriteString(fmt.Sprintf("Lunch menu for %s:\n\n", tomorrow.Format("01/02/2006")))
 	telegramMessage.WriteString(telegramMessages.String())
+	telegramMessage.WriteString(fmt.Sprintf("\n*Weather*:\n%s\n", weather))
 
 	if err := sendTelegramMessage(telegramMessage.String()); err != nil {
 		logger.Error("Failed to send Telegram message", "error", err)
@@ -92,7 +103,11 @@ func sendTelegramMessage(message string) error {
 		logger.Error("Failed to send Telegram message", "error", err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			logger.Error("Failed to close response body", "error", cerr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		logger.Error("Failed to send Telegram message", "status", resp.Status)
@@ -119,7 +134,11 @@ func getLunchMenuForSchool(date time.Time, school School) (string, error) {
 		logger.Error("Failed to get lunch menu", "school", school.Name, "error", err)
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			logger.Error("Failed to close response body", "error", cerr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		logger.Error("Failed to get lunch menu", "school", school.Name, "status", resp.Status)
@@ -147,4 +166,73 @@ func getLunchMenuForSchool(date time.Time, school School) (string, error) {
 		return "", errors.New("no menu items found for " + school.Name)
 	}
 	return menu.String(), nil
+}
+
+func getTomorrowsWeather(date time.Time) (string, error) {
+	// implementation goes here
+	url := "https://wttr.in/Chesapeake?format=j1"
+	logger.Info("Getting weather", "date", date, "url", url)
+
+	requestStart := time.Now()
+	resp, err := http.Get(url)
+	if err != nil {
+		logger.Error("Failed to get weather", "error", err)
+		return "", err
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			logger.Error("Failed to close response body", "error", cerr)
+		}
+	}()
+	logger.Info("Weather request completed", "duration", time.Since(requestStart).String())
+
+	if resp.StatusCode != http.StatusOK {
+		logger.Error("Failed to get weather", "status", resp.Status)
+		return "", fmt.Errorf("failed to get weather: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Error("Failed to read weather", "error", err)
+		return "", err
+	}
+
+	// find the forecast for the given date
+	var weather string
+	_, _ = jsonparser.ArrayEach(body, func(value []byte, _ jsonparser.ValueType, _ int, _ error) {
+		dateStr, _ := jsonparser.GetString(value, "date")
+		parsedDate, _ := time.Parse("2006-01-02", dateStr)
+		// compare just the date parts
+		// we assume the date is in local time, so we set the time to noon to avoid any DST issues
+		loc, _ := time.LoadLocation("America/New_York")
+		parsedDate = time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 12, 0, 0, 0, loc)
+		// logger.Info("Parsed date", "dateStr", dateStr, "parsedDate", parsedDate, "targetDate", date)
+		if parsedDate.Equal(date) {
+			// we want to get the weather at 6am, 12pm, and 6pm
+			hourlyWeather := strings.Builder{}
+			_, _ = jsonparser.ArrayEach(value, func(hourlyValue []byte, _ jsonparser.ValueType, _ int, _ error) {
+				timeStr, _ := jsonparser.GetString(hourlyValue, "time")
+				if timeStr == "600" || timeStr == "1200" || timeStr == "1800" {
+					tempF, _ := jsonparser.GetString(hourlyValue, "tempF")
+					weatherDesc, _ := jsonparser.GetString(hourlyValue, "weatherDesc", "[0]", "value")
+					switch timeStr {
+					case "600":
+						timeStr = "6 AM"
+					case "1200":
+						timeStr = "12 PM"
+					case "1800":
+						timeStr = "6 PM"
+					}
+					hourlyWeather.WriteString(fmt.Sprintf("%s - %s°F - %s\n", timeStr, tempF, weatherDesc))
+				}
+			}, "hourly")
+			weather = hourlyWeather.String()
+		}
+	}, "weather")
+
+	if weather != "" {
+		return weather, nil
+	}
+	logger.Warn("No weather found for date", "date", date)
+	return "", nil
 }
