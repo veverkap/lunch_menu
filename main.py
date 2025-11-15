@@ -258,17 +258,16 @@ def main():
         return
 
     weather = get_tomorrows_weather(tomorrow)
-    if weather:
-        weather_section = f"*Weather*:\n{weather}"
-    else:
+    if not weather:
         log_with_fields(logging.ERROR, "Failed to get weather")
-        weather_section = ""
+        weather = ""
+    elif weather:
+        telegram_messages.append(f"*Weather*:\n{weather}")
 
     # Build final message
     telegram_message = f"Lunch menu for {tomorrow.strftime('%m/%d/%Y')}:\n\n"
-    telegram_message += "\n".join(telegram_messages)
-    if weather_section:
-        telegram_message += f"\n{weather_section}"
+    telegram_message += "".join(telegram_messages)
+    telegram_message += f"\n*Weather*:\n{weather}\n"
 
     if not send_telegram_message(telegram_message):
         log_with_fields(logging.ERROR, "Failed to send Telegram message")
