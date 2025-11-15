@@ -1,0 +1,27 @@
+name: Python
+
+on:
+  workflow_dispatch:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '5 14 * * *'    
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      TELEGRAM_CHESAPEAKE_CHAT_ID: ${{ secrets.TELEGRAM_CHESAPEAKE_CHAT_ID }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Print env
+        run: env
+      - name: Run Python script
+        run: python main.py

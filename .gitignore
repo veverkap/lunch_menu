@@ -1,2 +1,5 @@
 .envrc
 .env
+lunch_menu
+__pycache__
+*.pyc
