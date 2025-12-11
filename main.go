@@ -52,17 +52,21 @@ func main() {
 		logger.Error("TELEGRAM_CHESAPEAKE_CHAT_ID not set")
 		return
 	}
+	logger.Debug("TELEGRAM_CHESAPEAKE_CHAT_ID set")
+
 	telegramToken = os.Getenv("TELEGRAM_TOKEN")
 	if telegramToken == "" {
 		logger.Error("TELEGRAM_TOKEN not set")
 		return
 	}
+	logger.Debug("TELEGRAM_TOKEN set")
+
 	githubToken = os.Getenv("GH_TOKEN")
 	if githubToken == "" {
 		logger.Error("GH_TOKEN not set")
 		return
 	}
-	logger.Info(githubToken)
+	logger.Debug("GH_TOKEN set")
 
 	// get the current time in the America/New_York time zone
 	loc, err := time.LoadLocation("America/New_York")
@@ -73,9 +77,11 @@ func main() {
 	// we want just the date, so set the time to noon to avoid any DST issues
 	now := time.Now().In(loc)
 	now = time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, loc)
+	logger.Debug("Current time", "now", now)
 	// get tomorrow's date
 	tomorrow := now.AddDate(0, 0, 1)
 	// now := time.Date(2025, 9, 3, 12, 0, 0, 0, loc) // for testing
+	logger.Debug("Tomorrow's date", "tomorrow", tomorrow)
 
 	logger = logger.With(
 		slog.Time("now", now),
@@ -83,7 +89,7 @@ func main() {
 	)
 
 	telegramMessages := strings.Builder{}
-
+	logger.Info("Getting lunch menus for schools", "schools", schools)
 	for _, school := range schools {
 		lunchMenu, err := getLunchMenuForSchool(tomorrow, school)
 		if err != nil {
@@ -97,7 +103,7 @@ func main() {
 		logger.Warn("No lunch menus found for any school")
 		return
 	}
-
+	logger.Info("Getting tomorrow's weather", "date", tomorrow)
 	weather, err := getTomorrowsWeather(tomorrow)
 	if err != nil {
 		logger.Error("Failed to get weather", "error", err)
@@ -109,14 +115,16 @@ func main() {
 	telegramMessage.WriteString(telegramMessages.String())
 	telegramMessage.WriteString(fmt.Sprintf("\n*Weather*:\n%s\n", weather))
 
-	// enhancedMessage, err := sprinkleAIOnIt(telegramMessage.String())
-	// if err != nil {
-	// 	logger.Error("Failed to enhance message with AI", "error", err)
-	// }
-	// if err := sendTelegramMessage(telegramMessage.String()); err != nil {
-	// 	logger.Error("Failed to send Telegram message", "error", err)
-	// }
-	// fmt.Println(enhancedMessage)
+	logger.Info("Final Telegram message", "message", telegramMessage.String())
+	enhancedMessage, err := sprinkleAIOnIt(telegramMessage.String())
+	if err != nil {
+		logger.Error("Failed to enhance message with AI", "error", err)
+	}
+	logger.Info("Enhanced message", "message", enhancedMessage)
+
+	if err := sendTelegramMessage(enhancedMessage); err != nil {
+		logger.Error("Failed to send Telegram message", "error", err)
+	}
 }
 
 func sendTelegramMessage(message string) error {
@@ -143,6 +151,7 @@ func sendTelegramMessage(message string) error {
 }
 
 func sprinkleAIOnIt(message string) (string, error) {
+	logger.Info("Enhancing message with AI", "message", message)
 	client := openai.NewClient(
 		option.WithAPIKey(githubToken),
 		option.WithBaseURL("https://models.github.ai/inference"),
@@ -152,13 +161,12 @@ func sprinkleAIOnIt(message string) (string, error) {
 			openai.UserMessage(message),
 			openai.SystemMessage(systemMessage),
 		},
-		Model: openai.ChatModelGPT5_2,
+		Model: "openai/gpt-4.1",
 	})
 	if err != nil {
 		logger.Error("Failed to get chat completion", "error", err)
 		return message, err
 	}
-	println(chatCompletion.Choices[0].Message.Content)
 	// implementation goes here
 	return chatCompletion.Choices[0].Message.Content, nil
 }
