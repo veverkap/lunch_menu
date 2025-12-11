@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,8 @@ import (
 	"time"
 
 	"github.com/buger/jsonparser"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 )
 
 type School struct {
@@ -22,11 +25,23 @@ type School struct {
 var (
 	telegramToken            string
 	telegramChesapeakeChatID string
+	githubToken              string
 	schools                  = []School{
 		{ID: "d9edb69f-dc06-41a4-8d8d-15c3e47d812f", Name: "Butts Road Intermediate"},
 		{ID: "6809b286-dbc7-48c1-bd22-d8db93816941", Name: "Butts Road Primary"},
 	}
-	logger *slog.Logger
+	logger        *slog.Logger
+	systemMessage = `You are a witty assistant who sends a message daily about the lunch for the next day to two children - Elena, a 10 year
+old girl who attends Butts Road Intermediate and John a 7 year old boy who attends Butts Road Primary. 
+
+Make sure to include the weather, the lunch menu and some comment. 
+The menu for the two schools is usually the same so if it isn't, call that out. 
+
+Use emojis. 
+
+Do not change the contents of the menu.  
+
+It must be accurately communicated.`
 )
 
 func main() {
@@ -37,11 +52,21 @@ func main() {
 		logger.Error("TELEGRAM_CHESAPEAKE_CHAT_ID not set")
 		return
 	}
+	logger.Debug("TELEGRAM_CHESAPEAKE_CHAT_ID set")
+
 	telegramToken = os.Getenv("TELEGRAM_TOKEN")
 	if telegramToken == "" {
 		logger.Error("TELEGRAM_TOKEN not set")
 		return
 	}
+	logger.Debug("TELEGRAM_TOKEN set")
+
+	githubToken = os.Getenv("GH_TOKEN")
+	if githubToken == "" {
+		logger.Error("GH_TOKEN not set")
+		return
+	}
+	logger.Debug("GH_TOKEN set")
 
 	// get the current time in the America/New_York time zone
 	loc, err := time.LoadLocation("America/New_York")
@@ -52,9 +77,11 @@ func main() {
 	// we want just the date, so set the time to noon to avoid any DST issues
 	now := time.Now().In(loc)
 	now = time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, loc)
+	logger.Debug("Current time", "now", now)
 	// get tomorrow's date
 	tomorrow := now.AddDate(0, 0, 1)
 	// now := time.Date(2025, 9, 3, 12, 0, 0, 0, loc) // for testing
+	logger.Debug("Tomorrow's date", "tomorrow", tomorrow)
 
 	logger = logger.With(
 		slog.Time("now", now),
@@ -62,7 +89,7 @@ func main() {
 	)
 
 	telegramMessages := strings.Builder{}
-
+	logger.Info("Getting lunch menus for schools", "schools", schools)
 	for _, school := range schools {
 		lunchMenu, err := getLunchMenuForSchool(tomorrow, school)
 		if err != nil {
@@ -76,7 +103,7 @@ func main() {
 		logger.Warn("No lunch menus found for any school")
 		return
 	}
-
+	logger.Info("Getting tomorrow's weather", "date", tomorrow)
 	weather, err := getTomorrowsWeather(tomorrow)
 	if err != nil {
 		logger.Error("Failed to get weather", "error", err)
@@ -88,10 +115,16 @@ func main() {
 	telegramMessage.WriteString(telegramMessages.String())
 	telegramMessage.WriteString(fmt.Sprintf("\n*Weather*:\n%s\n", weather))
 
-	if err := sendTelegramMessage(telegramMessage.String()); err != nil {
+	logger.Info("Final Telegram message", "message", telegramMessage.String())
+	enhancedMessage, err := sprinkleAIOnIt(telegramMessage.String())
+	if err != nil {
+		logger.Error("Failed to enhance message with AI", "error", err)
+	}
+	logger.Info("Enhanced message", "message", enhancedMessage)
+
+	if err := sendTelegramMessage(enhancedMessage); err != nil {
 		logger.Error("Failed to send Telegram message", "error", err)
 	}
-	fmt.Println(telegramMessage.String())
 }
 
 func sendTelegramMessage(message string) error {
@@ -115,6 +148,27 @@ func sendTelegramMessage(message string) error {
 	}
 
 	return nil
+}
+
+func sprinkleAIOnIt(message string) (string, error) {
+	logger.Info("Enhancing message with AI", "message", message)
+	client := openai.NewClient(
+		option.WithAPIKey(githubToken),
+		option.WithBaseURL("https://models.github.ai/inference"),
+	)
+	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(message),
+			openai.SystemMessage(systemMessage),
+		},
+		Model: "openai/gpt-4.1",
+	})
+	if err != nil {
+		logger.Error("Failed to get chat completion", "error", err)
+		return message, err
+	}
+	// implementation goes here
+	return chatCompletion.Choices[0].Message.Content, nil
 }
 
 func getLunchMenuForSchool(date time.Time, school School) (string, error) {
