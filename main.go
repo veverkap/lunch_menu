@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,8 @@ import (
 	"time"
 
 	"github.com/buger/jsonparser"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 )
 
 type School struct {
@@ -22,11 +25,23 @@ type School struct {
 var (
 	telegramToken            string
 	telegramChesapeakeChatID string
+	githubToken              string
 	schools                  = []School{
 		{ID: "d9edb69f-dc06-41a4-8d8d-15c3e47d812f", Name: "Butts Road Intermediate"},
 		{ID: "6809b286-dbc7-48c1-bd22-d8db93816941", Name: "Butts Road Primary"},
 	}
-	logger *slog.Logger
+	logger        *slog.Logger
+	systemMessage = `You are a witty assistant who sends a message daily about the lunch for the next day to two children - Elena, a 10 year
+old girl who attends Butts Road Intermediate and John a 7 year old boy who attends Butts Road Primary. 
+
+Make sure to include the weather, the lunch menu and some comment. 
+The menu for the two schools is usually the same so if it isn't, call that out. 
+
+Use emojis. 
+
+Do not change the contents of the menu.  
+
+It must be accurately communicated.`
 )
 
 func main() {
@@ -42,11 +57,12 @@ func main() {
 		logger.Error("TELEGRAM_TOKEN not set")
 		return
 	}
-	githubToken := os.Getenv("GH_TOKEN")
+	githubToken = os.Getenv("GH_TOKEN")
 	if githubToken == "" {
 		logger.Error("GH_TOKEN not set")
 		return
 	}
+	logger.Info(githubToken)
 
 	// get the current time in the America/New_York time zone
 	loc, err := time.LoadLocation("America/New_York")
@@ -93,10 +109,14 @@ func main() {
 	telegramMessage.WriteString(telegramMessages.String())
 	telegramMessage.WriteString(fmt.Sprintf("\n*Weather*:\n%s\n", weather))
 
+	// enhancedMessage, err := sprinkleAIOnIt(telegramMessage.String())
+	// if err != nil {
+	// 	logger.Error("Failed to enhance message with AI", "error", err)
+	// }
 	// if err := sendTelegramMessage(telegramMessage.String()); err != nil {
 	// 	logger.Error("Failed to send Telegram message", "error", err)
 	// }
-	fmt.Println(telegramMessage.String())
+	// fmt.Println(enhancedMessage)
 }
 
 func sendTelegramMessage(message string) error {
@@ -120,6 +140,27 @@ func sendTelegramMessage(message string) error {
 	}
 
 	return nil
+}
+
+func sprinkleAIOnIt(message string) (string, error) {
+	client := openai.NewClient(
+		option.WithAPIKey(githubToken),
+		option.WithBaseURL("https://models.github.ai/inference"),
+	)
+	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(message),
+			openai.SystemMessage(systemMessage),
+		},
+		Model: openai.ChatModelGPT5_2,
+	})
+	if err != nil {
+		logger.Error("Failed to get chat completion", "error", err)
+		return message, err
+	}
+	println(chatCompletion.Choices[0].Message.Content)
+	// implementation goes here
+	return chatCompletion.Choices[0].Message.Content, nil
 }
 
 func getLunchMenuForSchool(date time.Time, school School) (string, error) {
