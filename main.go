@@ -42,6 +42,11 @@ func main() {
 		logger.Error("TELEGRAM_TOKEN not set")
 		return
 	}
+	githubToken := os.Getenv("GITHUB_TOKEN")
+	if githubToken == "" {
+		logger.Error("GITHUB_TOKEN not set")
+		return
+	}
 
 	// get the current time in the America/New_York time zone
 	loc, err := time.LoadLocation("America/New_York")
@@ -88,9 +93,9 @@ func main() {
 	telegramMessage.WriteString(telegramMessages.String())
 	telegramMessage.WriteString(fmt.Sprintf("\n*Weather*:\n%s\n", weather))
 
-	if err := sendTelegramMessage(telegramMessage.String()); err != nil {
-		logger.Error("Failed to send Telegram message", "error", err)
-	}
+	// if err := sendTelegramMessage(telegramMessage.String()); err != nil {
+	// 	logger.Error("Failed to send Telegram message", "error", err)
+	// }
 	fmt.Println(telegramMessage.String())
 }
 
