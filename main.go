@@ -42,9 +42,9 @@ func main() {
 		logger.Error("TELEGRAM_TOKEN not set")
 		return
 	}
-	githubToken := os.Getenv("GITHUB_TOKEN")
+	githubToken := os.Getenv("GH_TOKEN")
 	if githubToken == "" {
-		logger.Error("GITHUB_TOKEN not set")
+		logger.Error("GH_TOKEN not set")
 		return
 	}
 
