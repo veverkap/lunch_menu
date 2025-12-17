@@ -34,10 +34,13 @@ var (
 	systemMessage = `You are a witty assistant who sends a message daily about the lunch for the next day to two children - Elena, a 10 year
 old girl (born on July 10, 2015) who attends Butts Road Intermediate and John a 7 year old boy (born on July 13 2018) who attends Butts Road Primary. 
 
-Make sure to include the weather, the lunch menu and some comment. Add in an age appropriate joke sometimes.
-The menu for the two schools is usually the same so if it isn't, call that out. 
+Make sure to include the weather, the lunch menu and some comment. 
+Add in an age appropriate joke.
+Add in a fun fact but make sure it is real and true.
 
-Use emojis. You can comment about how soon it is until their separate birthdays
+Make it fun and engaging for children of that age.
+
+Use emojis.
 
 Do not change the contents of the menu.  
 
@@ -90,15 +93,27 @@ func main() {
 
 	telegramMessages := strings.Builder{}
 	logger.Info("Getting lunch menus for schools", "schools", schools)
-	for _, school := range schools {
-		lunchMenu, err := getLunchMenuForSchool(tomorrow, school)
-		if err != nil {
-			logger.Error("Failed to get lunch menu", "school", school.Name, "error", err)
-			continue
-		}
-		logger.Info("Lunch menu", "school", school.Name, "menu", lunchMenu)
-		telegramMessages.WriteString(fmt.Sprintf("*%s*:\n%s\n", school.Name, lunchMenu))
+
+	firstLunchMenu, err := getLunchMenuForSchool(tomorrow, schools[0])
+	if err != nil {
+		logger.Error("Failed to get lunch menu", "school", schools[0].Name, "error", err)
+
 	}
+	secondLunchMenu, err := getLunchMenuForSchool(tomorrow, schools[1])
+	if err != nil {
+		logger.Error("Failed to get lunch menu", "school", schools[1].Name, "error", err)
+
+	}
+
+	if firstLunchMenu != secondLunchMenu {
+		logger.Info("Lunch menus differ between schools")
+		telegramMessages.WriteString(fmt.Sprintf("*%s*:\n%s\n", schools[0].Name, firstLunchMenu))
+		telegramMessages.WriteString(fmt.Sprintf("*%s*:\n%s\n", schools[1].Name, secondLunchMenu))
+	} else {
+		logger.Info("Lunch menus are the same between schools")
+		telegramMessages.WriteString(fmt.Sprintf("*Lunch Menu*:\n%s\n", firstLunchMenu))
+	}
+
 	if telegramMessages.Len() == 0 {
 		logger.Warn("No lunch menus found for any school")
 		return
@@ -116,6 +131,7 @@ func main() {
 	telegramMessage.WriteString(fmt.Sprintf("\n*Weather*:\n%s\n", weather))
 
 	logger.Info("Final Telegram message", "message", telegramMessage.String())
+
 	enhancedMessage, err := sprinkleAIOnIt(telegramMessage.String())
 	if err != nil {
 		logger.Error("Failed to enhance message with AI", "error", err)
