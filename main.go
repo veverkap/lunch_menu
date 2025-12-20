@@ -97,12 +97,12 @@ func main() {
 	firstLunchMenu, err := getLunchMenuForSchool(tomorrow, schools[0])
 	if err != nil {
 		logger.Error("Failed to get lunch menu", "school", schools[0].Name, "error", err)
-
+		return // no point in continuing if we can't get the first school's menu
 	}
 	secondLunchMenu, err := getLunchMenuForSchool(tomorrow, schools[1])
 	if err != nil {
 		logger.Error("Failed to get lunch menu", "school", schools[1].Name, "error", err)
-
+		return
 	}
 
 	if firstLunchMenu != secondLunchMenu {

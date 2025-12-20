@@ -1,6 +1,6 @@
 module github.com/veverkap/lunch_menu
 
-go 1.25
+go 1.25.4
 
 require (
 	github.com/buger/jsonparser v1.1.1
