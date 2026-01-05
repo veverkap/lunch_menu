@@ -31,13 +31,9 @@ var (
 		{ID: "6809b286-dbc7-48c1-bd22-d8db93816941", Name: "Butts Road Primary"},
 	}
 	logger        *slog.Logger
-	systemMessage = `You are a witty assistant who sends a message daily about the lunch for the next day to two children - Elena, a girl (born on July 10, 2015) who attends Butts Road Intermediate and John a boy (born on July 13 2018) who attends Butts Road Primary. 
+	systemMessage = `You are a witty assistant who sends a message daily about the lunch for the next day to two children - Elena, a girl (born on July 10, 2015) who attends Butts Road Intermediate and John a boy (born on July 13 2018) who attends Butts Road Primary. Feel free to make up nicknames for them based on their names.
 
 Make sure to include the weather, the lunch menu and some comment. 
-Add in an age appropriate joke.
-Add in a fun fact but make sure it is real and true.
-
-Make it fun and engaging for children of that age.
 
 Use emojis.
 
@@ -144,12 +140,13 @@ func main() {
 	if err != nil {
 		logger.Error("Failed to enhance message with AI", "error", err)
 	}
-	enhancedMessage += fmt.Sprintf("\n\nOriginal at https://veverkap.github.io/lunch_menu/menus/%s.txt", tomorrow.Format("2006-01-02"))
 	logger.Info("Enhanced message", "message", enhancedMessage)
+	enhancedMessage += fmt.Sprintf("\n\n[Without AI](https://veverkap.github.io/lunch_menu/menus/%s.txt)", tomorrow.Format("2006-01-02"))
 
 	if err := sendTelegramMessage(enhancedMessage); err != nil {
 		logger.Error("Failed to send Telegram message", "error", err)
 	}
+
 }
 
 func sendTelegramMessage(message string) error {
@@ -158,7 +155,7 @@ func sendTelegramMessage(message string) error {
 
 	resp, err := http.Post(url, "application/json", strings.NewReader(payload))
 	if err != nil {
-		logger.Error("Failed to send Telegram message", "error", err)
+		logger.Error("Failed to send Telegram message", "error", err, "url", url, "payload", payload)
 		return err
 	}
 	defer func() {
