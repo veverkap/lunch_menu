@@ -134,8 +134,8 @@ func main() {
 
 	logger.Info("Final Telegram message", "message", telegramMessage.String())
 
-	// write this to menus/YYYY-MM-DD.md
-	filename := fmt.Sprintf("menus/%s.md", tomorrow.Format("2006-01-02"))
+	// write this to menus/YYYY-MM-DD.txt
+	filename := fmt.Sprintf("menus/%s.txt", tomorrow.Format("2006-01-02"))
 	if err := os.WriteFile(filename, []byte(telegramMessage.String()), 0644); err != nil {
 		logger.Error("Failed to write menu to file", "file", filename, "error", err)
 	}
@@ -144,7 +144,7 @@ func main() {
 	if err != nil {
 		logger.Error("Failed to enhance message with AI", "error", err)
 	}
-	// enhancedMessage += "\n\n_(Message enhanced with AI - Original at https://github.com/veverkap/lunch_menu)_"
+	enhancedMessage += fmt.Sprintf("\n\n_(Message enhanced with AI - Original at https://veverkap.github.io/lunch_menu/menus/%s.txt)_", tomorrow.Format("2006-01-02"))
 	logger.Info("Enhanced message", "message", enhancedMessage)
 
 	if err := sendTelegramMessage(enhancedMessage); err != nil {
