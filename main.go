@@ -144,7 +144,7 @@ func main() {
 	if err != nil {
 		logger.Error("Failed to enhance message with AI", "error", err)
 	}
-	enhancedMessage += fmt.Sprintf("\n\n_(Message enhanced with AI - Original at https://veverkap.github.io/lunch_menu/menus/%s.txt)_", tomorrow.Format("2006-01-02"))
+	enhancedMessage += fmt.Sprintf("\n\nOriginal at https://veverkap.github.io/lunch_menu/menus/%s.txt", tomorrow.Format("2006-01-02"))
 	logger.Info("Enhanced message", "message", enhancedMessage)
 
 	if err := sendTelegramMessage(enhancedMessage); err != nil {
