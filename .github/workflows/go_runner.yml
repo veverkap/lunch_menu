@@ -27,5 +27,13 @@ jobs:
         run: go build -v ./...
       - name: Print env
         run: env
-      - name: Test with the Go CLI
+      - name: Run the go program
         run: go run main.go
+        # commit any changes to the repo
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Automated update of lunch menu" || echo "No changes to commit"
+          git push origin HEAD:main

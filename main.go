@@ -31,8 +31,7 @@ var (
 		{ID: "6809b286-dbc7-48c1-bd22-d8db93816941", Name: "Butts Road Primary"},
 	}
 	logger        *slog.Logger
-	systemMessage = `You are a witty assistant who sends a message daily about the lunch for the next day to two children - Elena, a 10 year
-old girl (born on July 10, 2015) who attends Butts Road Intermediate and John a 7 year old boy (born on July 13 2018) who attends Butts Road Primary. 
+	systemMessage = `You are a witty assistant who sends a message daily about the lunch for the next day to two children - Elena, a girl (born on July 10, 2015) who attends Butts Road Intermediate and John a boy (born on July 13 2018) who attends Butts Road Primary. 
 
 Make sure to include the weather, the lunch menu and some comment. 
 Add in an age appropriate joke.
@@ -41,6 +40,8 @@ Add in a fun fact but make sure it is real and true.
 Make it fun and engaging for children of that age.
 
 Use emojis.
+
+All dates are in the America/New_York time zone and format MM/DD/YYYY.
 
 Do not change the contents of the menu.  
 
@@ -125,6 +126,7 @@ func main() {
 	} else if weather != "" {
 		telegramMessages.WriteString(fmt.Sprintf("*Weather*:\n%s\n", weather))
 	}
+
 	telegramMessage := strings.Builder{}
 	telegramMessage.WriteString(fmt.Sprintf("Lunch menu for %s:\n\n", tomorrow.Format("01/02/2006")))
 	telegramMessage.WriteString(telegramMessages.String())
@@ -132,10 +134,17 @@ func main() {
 
 	logger.Info("Final Telegram message", "message", telegramMessage.String())
 
+	// write this to menus/YYYY-MM-DD.md
+	filename := fmt.Sprintf("menus/%s.md", tomorrow.Format("2006-01-02"))
+	if err := os.WriteFile(filename, []byte(telegramMessage.String()), 0644); err != nil {
+		logger.Error("Failed to write menu to file", "file", filename, "error", err)
+	}
+
 	enhancedMessage, err := sprinkleAIOnIt(telegramMessage.String())
 	if err != nil {
 		logger.Error("Failed to enhance message with AI", "error", err)
 	}
+	// enhancedMessage += "\n\n_(Message enhanced with AI - Original at https://github.com/veverkap/lunch_menu)_"
 	logger.Info("Enhanced message", "message", enhancedMessage)
 
 	if err := sendTelegramMessage(enhancedMessage); err != nil {
