@@ -183,7 +183,7 @@ func sprinkleAIOnIt(message string) (string, error) {
 			openai.UserMessage(message),
 			openai.SystemMessage(systemMessage),
 		},
-		Model: "openai/gpt-4.1",
+		Model: "openai/gpt-5-mini",
 	})
 	if err != nil {
 		logger.Error("Failed to get chat completion", "error", err)
