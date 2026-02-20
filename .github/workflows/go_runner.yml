@@ -28,7 +28,7 @@ jobs:
       - name: Print env
         run: env
       - name: Run the go program
-        run: go run main.go
+        run: ./lunch_menu
         # commit any changes to the repo
       - name: Commit changes
         run: |
