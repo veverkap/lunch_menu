@@ -126,7 +126,6 @@ func main() {
 	telegramMessage := strings.Builder{}
 	fmt.Fprintf(&telegramMessage, "Lunch menu for %s:\n\n", tomorrow.Format("01/02/2006"))
 	telegramMessage.WriteString(telegramMessages.String())
-	fmt.Fprintf(&telegramMessage, "\n*Weather*:\n%s\n", weather)
 
 	logger.Info("Final Telegram message", "message", telegramMessage.String())
 

@@ -46,7 +46,7 @@ func sendTelegramImage(photoData []byte) error {
 		log.Fatal(err)
 	}
 
-	_ = writer.WriteField("chat_id", "1169761930")
+	_ = writer.WriteField("chat_id", telegramChesapeakeChatID)
 
 	err = writer.Close()
 	if err != nil {

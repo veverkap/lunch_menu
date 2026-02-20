@@ -31,6 +31,11 @@ func sprinkleAIOnIt(message string) (string, error) {
 		logger.Error("Failed to get chat completion", "error", err)
 		return message, err
 	}
+	if len(chatCompletion.Choices) == 0 {
+		err := fmt.Errorf("no choices returned from chat completion")
+		logger.Error("Failed to get chat completion", "error", err)
+		return message, err
+	}
 	return chatCompletion.Choices[0].Message.Content, nil
 }
 

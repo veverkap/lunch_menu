@@ -6,14 +6,18 @@ This is a Go application that runs daily (via GitHub Actions cron at 2:05 PM UTC
 
 ## Architecture
 
-- **`main.go`** — Single-file Go application. All logic lives here: menu fetching, weather fetching, AI enhancement, and Telegram messaging.
+- **`main.go`** — Application entry point. Orchestrates the daily run: ties together menu fetching, weather fetching, AI enhancement, and Telegram messaging.
+- **`menu.go`** — Fetches and parses school lunch menus, and handles reading/writing menu files under `menus/`.
+- **`weather.go`** — Fetches and formats weather data from the external weather API.
+- **`telegram.go`** — Contains helpers for interacting with the Telegram Bot API (sending messages and photos).
+- **`ai.go`** — Builds prompts and calls the AI API to enhance the lunch message content.
 - **External APIs used:**
   - [SchoolCafe API](https://webapis.schoolcafe.com) — fetches daily lunch menus by school ID
   - [wttr.in](https://wttr.in) — weather forecast (JSON format)
   - [GitHub Models / OpenAI API](https://models.github.ai/inference) — AI message enhancement via `openai-go` SDK
   - [Telegram Bot API](https://api.telegram.org) — sends messages and photos to a chat
 - **`menus/`** — Stores raw menu text files named `YYYY-MM-DD.txt`, committed automatically by CI.
-- **`lunch.prompt.yml`** — Reference prompt template for the AI system message (the actual system message is defined as a Go variable `systemMessage` in `main.go`).
+- **`lunch.prompt.yml`** — Reference prompt template for the AI system message (the actual system message is defined as a Go variable `systemMessage` in the Go codebase).
 
 ## Build & Run
 
