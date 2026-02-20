@@ -152,8 +152,10 @@ func main() {
 		logger.Error("Failed to generate menu image", "error", err)
 	}
 
-	if err := sendTelegramImage(img); err != nil {
-		logger.Error("Failed to send Telegram image", "error", err)
+	if img != nil {
+		if err := sendTelegramImage(img); err != nil {
+			logger.Error("Failed to send Telegram image", "error", err)
+		}
 	}
 }
 
