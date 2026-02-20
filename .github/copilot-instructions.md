@@ -38,6 +38,6 @@ There are no tests in this project.
 
 - **JSON parsing:** Uses `github.com/buger/jsonparser` for manual JSON traversal rather than unmarshaling into structs. Follow this pattern when adding new API response parsing.
 - **Error handling:** Log errors with `logger.Error(...)` and return early. The global `logger` is a `slog.Logger` with JSON output.
-- **Telegram methods:** Send JSON payloads via `http.Post` directly (no Telegram SDK). When adding new Telegram Bot API methods, follow the existing `sendTelegramMessage` / `sendTelegramPhoto` pattern.
+- **Telegram methods:** Send JSON payloads via `http.Post` directly (no Telegram SDK). When adding new Telegram Bot API methods, follow the existing `sendTelegramMessage` / `sendTelegramImage` pattern.
 - **Time zone:** All dates use `America/New_York`. Times are normalized to noon to avoid DST edge cases.
 - **CI commits results:** The GitHub Actions workflow runs the program, then auto-commits any new files in `menus/` back to `main`.
