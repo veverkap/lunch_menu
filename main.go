@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -26,6 +28,7 @@ var (
 	telegramToken            string
 	telegramChesapeakeChatID string
 	githubToken              string
+	geminiAPIKey             string
 	schools                  = []School{
 		{ID: "d9edb69f-dc06-41a4-8d8d-15c3e47d812f", Name: "Butts Road Intermediate"},
 		{ID: "6809b286-dbc7-48c1-bd22-d8db93816941", Name: "Butts Road Primary"},
@@ -67,6 +70,13 @@ func main() {
 		return
 	}
 	logger.Debug("GH_TOKEN set")
+
+	geminiAPIKey = os.Getenv("GEMINI_API_KEY")
+	if geminiAPIKey == "" {
+		logger.Error("GEMINI_API_KEY not set")
+		return
+	}
+	logger.Debug("GEMINI_API_KEY set")
 
 	// get the current time in the America/New_York time zone
 	loc, err := time.LoadLocation("America/New_York")
@@ -147,6 +157,81 @@ func main() {
 		logger.Error("Failed to send Telegram message", "error", err)
 	}
 
+}
+
+func generateMenuImage(menuMessage string) ([]byte, error) {
+	logger.Info("Generating menu image with Gemini")
+
+	prompt := fmt.Sprintf("Generate a fun, colorful, cartoon-style illustration representing this school lunch menu and weather. Do not include any text in the image.\n\n%s", menuMessage)
+
+	requestBody := fmt.Sprintf(`{
+		"contents": [{"role": "user", "parts": [{"text": %q}]}],
+		"generationConfig": {"responseModalities": ["IMAGE"]}
+	}`, prompt)
+
+	apiURL := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=%s", geminiAPIKey)
+
+	resp, err := http.Post(apiURL, "application/json", bytes.NewReader([]byte(requestBody)))
+	if err != nil {
+		logger.Error("Failed to call Gemini API", "error", err)
+		return nil, err
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			logger.Error("Failed to close response body", "error", cerr)
+		}
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Error("Failed to read Gemini response", "error", err)
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		logger.Error("Gemini API error", "status", resp.Status, "body", string(body))
+		return nil, fmt.Errorf("gemini API error: %s", resp.Status)
+	}
+
+	// Extract base64 image data from response: candidates[0].content.parts[0].inlineData.data
+	imageData, err := jsonparser.GetString(body, "candidates", "[0]", "content", "parts", "[0]", "inlineData", "data")
+	if err != nil {
+		logger.Error("Failed to parse image data from Gemini response", "error", err)
+		return nil, fmt.Errorf("failed to parse image data: %w", err)
+	}
+
+	imageBytes, err := base64.StdEncoding.DecodeString(imageData)
+	if err != nil {
+		logger.Error("Failed to decode base64 image data", "error", err)
+		return nil, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	logger.Info("Generated menu image", "size", len(imageBytes))
+	return imageBytes, nil
+}
+
+func sendTelegramPhoto(photoURL string, caption string) error {
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", telegramToken)
+	payload := fmt.Sprintf(`{"chat_id":"%s","photo":"%s","caption":"%s","parse_mode":"Markdown"}`, telegramChesapeakeChatID, photoURL, caption)
+
+	resp, err := http.Post(apiURL, "application/json", strings.NewReader(payload))
+	if err != nil {
+		logger.Error("Failed to send Telegram photo", "error", err, "url", apiURL)
+		return err
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			logger.Error("Failed to close response body", "error", cerr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		logger.Error("Failed to send Telegram photo", "status", resp.Status, "body", string(body))
+		return fmt.Errorf("failed to send Telegram photo: %s", resp.Status)
+	}
+
+	return nil
 }
 
 func sendTelegramMessage(message string) error {
