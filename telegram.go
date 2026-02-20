@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -39,32 +38,41 @@ func sendTelegramImage(photoData []byte) error {
 
 	part, err := writer.CreateFormFile("photo", "menu_image.png")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("Failed to create form file", "error", err)
+		return err
 	}
 	_, err = part.Write(photoData)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("Failed to write photo data", "error", err)
+		return err
 	}
 
 	_ = writer.WriteField("chat_id", telegramChesapeakeChatID)
 
 	err = writer.Close()
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("Failed to close multipart writer", "error", err)
+		return err
 	}
 
 	req, err := http.NewRequest("POST", apiURL, body)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("Failed to create HTTP request", "error", err)
+		return err
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("Failed to send Telegram photo", "error", err)
+		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			logger.Error("Failed to close response body", "error", cerr)
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		logger.Error("Failed to send Telegram message", "status", resp.Status)
 		return fmt.Errorf("failed to send Telegram message: %s", resp.Status)
