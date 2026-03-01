@@ -18,7 +18,6 @@ var (
 	telegramToken            string
 	telegramChesapeakeChatID string
 	githubToken              string
-	geminiAPIKey             string
 	schools                  = []School{
 		{ID: "d9edb69f-dc06-41a4-8d8d-15c3e47d812f", Name: "Butts Road Intermediate"},
 		{ID: "6809b286-dbc7-48c1-bd22-d8db93816941", Name: "Butts Road Primary"},
@@ -61,12 +60,6 @@ func main() {
 		return
 	}
 	logger.Debug("GH_TOKEN set")
-
-	geminiAPIKey = os.Getenv("GEMINI_API_KEY")
-	if geminiAPIKey == "" {
-		logger.Error("GEMINI_API_KEY not set")
-		return
-	}
 
 	// get the current time in the America/New_York time zone
 	loc, err := time.LoadLocation("America/New_York")
@@ -146,17 +139,4 @@ func main() {
 	if err := sendTelegramMessage(enhancedMessage); err != nil {
 		logger.Error("Failed to send Telegram message", "error", err)
 	}
-
-	img, err := generateMenuImage(telegramMessage.String())
-	if err != nil {
-		logger.Error("Failed to generate menu image", "error", err)
-	}
-
-	if img != nil {
-		if err := sendTelegramImage(img); err != nil {
-			logger.Error("Failed to send Telegram image", "error", err)
-		}
-	}
 }
-
-
