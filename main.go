@@ -134,7 +134,7 @@ func main() {
 	}
 
 	logger.Info("Enhanced message", "message", enhancedMessage)
-	enhancedMessage += fmt.Sprintf("\n\n[Without AI](https://veverkap.github.io/lunch_menu/menus/%s.txt)", tomorrow.Format("2006-01-02"))
+	enhancedMessage += fmt.Sprintf("\n\n[Without AI](https://veverkap.github.io/lunchmenu/menus/%s.txt)", tomorrow.Format("2006-01-02"))
 
 	if err := sendTelegramMessage(enhancedMessage); err != nil {
 		logger.Error("Failed to send Telegram message", "error", err)
