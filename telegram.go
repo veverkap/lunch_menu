@@ -6,13 +6,15 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 func sendTelegramMessage(message string) error {
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", telegramToken)
 	payload := fmt.Sprintf(`{"chat_id":"%s","text":"%s","parse_mode":"Markdown"}`, telegramChesapeakeChatID, message)
 
-	resp, err := http.Post(url, "application/json", strings.NewReader(payload))
+	resp, err := retryablehttp.Post(url, "application/json", strings.NewReader(payload))
 	if err != nil {
 		logger.Error("Failed to send Telegram message", "error", err, "url", url, "payload", payload)
 		return err
