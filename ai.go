@@ -16,8 +16,8 @@ func sprinkleAIOnIt(message string) (string, error) {
 	)
 	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(message),
 			openai.SystemMessage(systemMessage),
+			openai.UserMessage(message),
 		},
 		Model: "openai/gpt-5-mini",
 	})
