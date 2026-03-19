@@ -26,8 +26,8 @@ func GetLunchMenuForSchool(date time.Time, school School) (string, []string, err
 		url.QueryEscape(date.Format("01/02/2006")),
 	)
 	slog.Info("Constructed URL", "url", url)
-
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
 	if err != nil {
 		slog.Error("Failed to get lunch menu", "school", school.Name, "error", err)
 		return "", nil, err

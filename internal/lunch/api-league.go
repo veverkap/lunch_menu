@@ -6,14 +6,16 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type APILeagueClient struct {
-	Key string
+	Key    string
+	Client *http.Client
 }
 
 func NewAPIClient(key string) *APILeagueClient {
-	return &APILeagueClient{Key: key}
+	return &APILeagueClient{Key: key, Client: &http.Client{Timeout: 10 * time.Second}}
 }
 
 type GifResponse struct {
@@ -41,7 +43,7 @@ func (c *APILeagueClient) GetGif(query string) (string, error) {
 		slog.Error("Failed to create request", "error", err)
 		return "", err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		slog.Error("Failed to get GIF", "error", err)
 		return "", err
@@ -77,9 +79,8 @@ func (c *APILeagueClient) GetRiddle(diffID string) (RiddleResponse, error) {
 		slog.Error("Failed to create request", "error", err)
 		return RiddleResponse{}, err
 	}
-	req.Header.Set("Authorization", "Bearer "+c.Key)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		slog.Error("Failed to get riddle", "error", err)
 		return RiddleResponse{}, err

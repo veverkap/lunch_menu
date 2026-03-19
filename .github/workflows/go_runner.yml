@@ -11,9 +11,10 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
+      API_LEAGUE_KEY: ${{ secrets.API_LEAGUE_KEY }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
       TELEGRAM_CHESAPEAKE_CHAT_ID: ${{ secrets.TELEGRAM_CHESAPEAKE_CHAT_ID }}
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go 

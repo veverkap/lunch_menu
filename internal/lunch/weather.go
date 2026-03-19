@@ -16,7 +16,8 @@ func GetTomorrowsWeather(date time.Time) (string, error) {
 	slog.Info("Getting weather", "date", date, "url", url)
 
 	requestStart := time.Now()
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
 	if err != nil {
 		slog.Error("Failed to get weather", "error", err)
 		return "", err
