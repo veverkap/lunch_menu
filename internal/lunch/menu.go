@@ -52,12 +52,18 @@ func GetLunchMenuForSchool(date time.Time, school School) (string, []string, err
 	menu := strings.Builder{}
 	menuItems := []string{}
 
-	_, _ = jsonparser.ArrayEach(body, func(value []byte, _ jsonparser.ValueType, _ int, _ error) {
-		description, _ := jsonparser.GetString(value, "MenuItemDescription")
+	_, parseErr := jsonparser.ArrayEach(body, func(value []byte, _ jsonparser.ValueType, _ int, _ error) {
+		description, err := jsonparser.GetString(value, "MenuItemDescription")
+		if err != nil || strings.TrimSpace(description) == "" {
+			return
+		}
 		slog.Info("Menu item", "item", description)
 		menu.WriteString(description + "\n")
 		menuItems = append(menuItems, description)
 	}, "ENTREES")
+	if parseErr != nil {
+		return "", nil, fmt.Errorf("failed to parse menu response: %w", parseErr)
+	}
 
 	if menu.Len() == 0 {
 		return "", nil, errors.New("no menu items found for " + school.Name)

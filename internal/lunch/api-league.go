@@ -1,12 +1,14 @@
 package lunch
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/buger/jsonparser"
 )
 
 type APILeagueClient struct {
@@ -18,17 +20,9 @@ func NewAPIClient(key string) *APILeagueClient {
 	return &APILeagueClient{Key: key, Client: &http.Client{Timeout: 10 * time.Second}}
 }
 
-type GifResponse struct {
-	Images []struct {
-		URL    string `json:"url"`
-		Width  int    `json:"width"`
-		Height int    `json:"height"`
-	} `json:"images"`
-}
-
 type RiddleResponse struct {
-	Riddle string `json:"riddle"`
-	Answer string `json:"answer"`
+	Riddle string
+	Answer string
 }
 
 func (r *RiddleResponse) String() string {
@@ -59,18 +53,26 @@ func (c *APILeagueClient) GetGif(query string) (string, error) {
 		return "", fmt.Errorf("failed to get GIF: %s", resp.Status)
 	}
 
-	var gifResp GifResponse
-	if err := json.NewDecoder(resp.Body).Decode(&gifResp); err != nil {
-		slog.Error("Failed to decode GIF response", "error", err)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Error("Failed to read GIF response", "error", err)
 		return "", err
 	}
 
-	if len(gifResp.Images) == 0 {
+	var gifURL string
+	_, _ = jsonparser.ArrayEach(body, func(value []byte, _ jsonparser.ValueType, _ int, _ error) {
+		if gifURL == "" {
+			u, _ := jsonparser.GetString(value, "url")
+			gifURL = u
+		}
+	}, "images")
+
+	if gifURL == "" {
 		slog.Warn("No GIFs found for query", "query", query)
 		return "", nil // no error, just no results
 	}
 
-	return gifResp.Images[0].URL, nil
+	return gifURL, nil
 }
 
 func (c *APILeagueClient) GetRiddle(diffID string) (RiddleResponse, error) {
@@ -96,11 +98,22 @@ func (c *APILeagueClient) GetRiddle(diffID string) (RiddleResponse, error) {
 		return RiddleResponse{}, fmt.Errorf("failed to get riddle: %s", resp.Status)
 	}
 
-	var riddleResp RiddleResponse
-	if err := json.NewDecoder(resp.Body).Decode(&riddleResp); err != nil {
-		slog.Error("Failed to decode riddle response", "error", err)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Error("Failed to read riddle response", "error", err)
 		return RiddleResponse{}, err
 	}
 
-	return riddleResp, nil
+	riddle, err := jsonparser.GetString(body, "riddle")
+	if err != nil {
+		slog.Error("Failed to parse riddle field", "error", err)
+		return RiddleResponse{}, err
+	}
+	answer, err := jsonparser.GetString(body, "answer")
+	if err != nil {
+		slog.Error("Failed to parse answer field", "error", err)
+		return RiddleResponse{}, err
+	}
+
+	return RiddleResponse{Riddle: riddle, Answer: answer}, nil
 }

@@ -110,8 +110,8 @@ func main() {
 	} else {
 		menuWritten = true
 	}
-	enhancedMessage := telegramMessage.String()
 
+	enhancedMessage := telegramMessage.String()
 	if aiMessage, err := aiClient.SprinkleAIOnIt(telegramMessage.String()); err != nil {
 		slog.Error("Failed to enhance message with AI", "error", err)
 	} else {
