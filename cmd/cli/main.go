@@ -11,6 +11,8 @@ import (
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	config, err := lunch.NewConfig()
 	if err != nil {
 		slog.Error("Failed to load config", "error", err)
@@ -33,7 +35,7 @@ func main() {
 	}
 	logger.Debug("API client created successfully")
 
-	aiClient := lunch.NewAIClient(config.GitHubToken)
+	aiClient := lunch.NewAIClient(config.GitHubToken, config.SystemMessage)
 	if aiClient == nil {
 		slog.Error("Failed to create AI client")
 		return
@@ -101,13 +103,19 @@ func main() {
 
 	// write this to menus/YYYY-MM-DD.txt
 	filename := fmt.Sprintf("menus/%s.txt", config.Tomorrow.Format("2006-01-02"))
+
+	menuWritten := false
 	if err := os.WriteFile(filename, []byte(telegramMessage.String()), 0644); err != nil {
 		slog.Error("Failed to write menu to file", "file", filename, "error", err)
+	} else {
+		menuWritten = true
 	}
+	enhancedMessage := telegramMessage.String()
 
-	enhancedMessage, err := aiClient.SprinkleAIOnIt(telegramMessage.String())
-	if err != nil {
+	if aiMessage, err := aiClient.SprinkleAIOnIt(telegramMessage.String()); err != nil {
 		slog.Error("Failed to enhance message with AI", "error", err)
+	} else {
+		enhancedMessage = aiMessage
 	}
 	slog.Info("Enhanced message", "message", enhancedMessage)
 
@@ -120,7 +128,9 @@ func main() {
 		enhancedMessage += fmt.Sprintf("\n\n*Riddle of the Day*:\n%s\n[Answer](https://veverkap.github.io/lunchmenu/riddles/%s.txt)", riddle.Riddle, config.Tomorrow.Format("2006-01-02"))
 	}
 
-	enhancedMessage += fmt.Sprintf("\n\n[Without AI](https://veverkap.github.io/lunchmenu/menus/%s.txt)", config.Tomorrow.Format("2006-01-02"))
+	if menuWritten {
+		enhancedMessage += fmt.Sprintf("\n\n[Without AI](https://veverkap.github.io/lunchmenu/menus/%s.txt)", config.Tomorrow.Format("2006-01-02"))
+	}
 
 	if gif != "" {
 		enhancedMessage += fmt.Sprintf("\n\n*GIF of the Day*:\n%s", gif)
