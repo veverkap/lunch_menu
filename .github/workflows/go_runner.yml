@@ -25,7 +25,7 @@ jobs:
         # run: go get .
         run: go mod tidy
       - name: Build
-        run: go build -v ./...
+        run: go build -o lunch_menu ./cmd/cli
       - name: Print env
         run: env
       - name: Run the go program
