@@ -3,7 +3,7 @@ module github.com/veverkap/lunchmenu
 go 1.26.1
 
 require (
-	github.com/buger/jsonparser v1.1.1
+	github.com/buger/jsonparser v1.1.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/openai/openai-go/v3 v3.12.0
 )
