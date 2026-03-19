@@ -5,3 +5,8 @@ Cheese & Cracker Bento Box
 Whole Grain Macaroni & Cheese
 Whole Grain Mini Corn Dogs
 
+*Weather*:
+6 AM - 35°F - Clear 
+12 PM - 62°F - Sunny
+6 PM - 64°F - Partly Cloudy 
+
