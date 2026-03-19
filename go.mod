@@ -1,4 +1,4 @@
-module github.com/veverkap/lunch_menu
+module github.com/veverkap/lunchmenu
 
 go 1.25.4
 

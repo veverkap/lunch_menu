@@ -1,8 +1,9 @@
-package main
+package lunch
 
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -10,31 +11,32 @@ import (
 	"github.com/buger/jsonparser"
 )
 
-func getTomorrowsWeather(date time.Time) (string, error) {
+func GetTomorrowsWeather(date time.Time) (string, error) {
 	url := "https://wttr.in/Chesapeake?format=j1"
-	logger.Info("Getting weather", "date", date, "url", url)
+	slog.Info("Getting weather", "date", date, "url", url)
 
 	requestStart := time.Now()
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
 	if err != nil {
-		logger.Error("Failed to get weather", "error", err)
+		slog.Error("Failed to get weather", "error", err)
 		return "", err
 	}
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil {
-			logger.Error("Failed to close response body", "error", cerr)
+			slog.Error("Failed to close response body", "error", cerr)
 		}
 	}()
-	logger.Info("Weather request completed", "duration", time.Since(requestStart).String())
+	slog.Info("Weather request completed", "duration", time.Since(requestStart).String())
 
 	if resp.StatusCode != http.StatusOK {
-		logger.Error("Failed to get weather", "status", resp.Status)
+		slog.Error("Failed to get weather", "status", resp.Status)
 		return "", fmt.Errorf("failed to get weather: %s", resp.Status)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error("Failed to read weather", "error", err)
+		slog.Error("Failed to read weather", "error", err)
 		return "", err
 	}
 
@@ -64,11 +66,11 @@ func getTomorrowsWeather(date time.Time) (string, error) {
 			}, "hourly")
 			weather = hourlyWeather.String()
 		}
-	}, "weather")
+	}, "data", "weather")
 
 	if weather != "" {
 		return weather, nil
 	}
-	logger.Warn("No weather found for date", "date", date)
+	slog.Warn("No weather found for date", "date", date)
 	return "", nil
 }
